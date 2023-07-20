@@ -1,0 +1,93 @@
+{
+<<<<<<< HEAD
+    // created by vscode papyrus-lang papyrus.skyrimSpecialEdition.generateProject
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Gossip Events (Skyrim SE)",
+            "group": "build",
+            "type": "process",
+            "command": "${config:papyrus.skyrimSpecialEdition.installPath}\\Papyrus Compiler\\PapyrusCompiler.exe",
+            "options": {
+                "cwd": "${config:papyrus.skyrimSpecialEdition.installPath}\\Papyrus Compiler"
+            },
+            "args": [
+                {
+                    "value": "${config:papyrus.skyrimSpecialEdition.installPath}\\Data\\Source\\Scripts\\USLS",
+                    "quoting": "strong"
+                },
+                {
+                    "value": "-import=${config:papyrus.skyrimSpecialEdition.installPath}\\Data\\Source\\Scripts;${config:papyrus.skyrimSpecialEdition.installPath}\\Data\\Scripts\\Source",
+                    "quoting": "strong"
+                },
+                {
+                    "value": "-output=F:\\Skyrim SE - Mod Organizer\\mods\\UnforgivingSouls\\Scripts",
+                    "quoting": "strong"
+                },
+                {
+                    "value": "-f=TESV_Papyrus_Flags.flg",
+                    "quoting": "strong"
+                },
+                {
+                    "value": "-quiet",
+                    "quoting": "strong"
+                },
+                {
+                    "value": "-all",
+                    "quoting": "strong"
+                }
+            ],
+            "problemMatcher": []
+        },
+        {
+            "type": "pyro",
+            "projectFile": "skyrimse.ppj",
+            "gamePath": "F:\\steamLibrary\\steamapps\\common\\Skyrim Special Edition\\",
+            "problemMatcher": [
+                "$PapyrusCompiler"
+            ],
+            "label": "pyro: Compile Project (skyrimse.ppj)"
+        }
+    ]
+=======
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "pyro",
+			"projectFile": "Debug.ppj",
+			"gamePath": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Skyrim Special Edition\\",
+			"problemMatcher": [
+				"$PapyrusCompiler"
+			],
+			"label": "Compile Papyrus Scripts (Debug)",
+			"group": {
+				"kind": "build"
+			}
+		},
+		{
+			"type": "pyro",
+			"projectFile": "Debug-Tests.ppj",
+			"gamePath": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Skyrim Special Edition\\",
+			"problemMatcher": [
+				"$PapyrusCompiler"
+			],
+			"label": "Compile Papyrus Test Scripts",
+			"group": {
+				"kind": "build"
+			}
+		},
+		{
+			"type": "pyro",
+			"projectFile": "Release.ppj",
+			"gamePath": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Skyrim Special Edition\\",
+			"problemMatcher": [
+				"$PapyrusCompiler"
+			],
+			"label": "Compile Papyrus Scripts (Release)",
+			"group": {
+				"kind": "build"
+			}
+		}
+	]
+>>>>>>> Configure SAST in `.gitlab-ci.yml`, creating this file if it does not already exist
+}
