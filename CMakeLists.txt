@@ -21,7 +21,6 @@ configure_file(
         @ONLY)
 
 set(headers
-        include/Sample/Sample.h
         include/Scandal.h)
 
 set(sources

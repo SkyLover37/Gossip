@@ -1,9 +1,9 @@
 #pragma once
 
 #include <RE/Skyrim.h>
+#include <SKSE\Interfaces.h>
 using namespace RE::BSScript;
 using namespace SKSE;
-using namespace SKSE::log;
 using namespace SKSE::stl;
 
 template<typename T, typename Z>
@@ -21,7 +21,8 @@ namespace gossip {
         };
         struct fameData {
             int fameValue;
-            int tolerance;
+            int gossip;
+            int tolerance = 0;
             int max = 100;
             int min = 0;
         };
@@ -41,40 +42,55 @@ namespace gossip {
             std::string name = "";
             RE::FormType type;
             RE::TESForm* formAlias;
-            map<RE::BGSLocation*, map<fameInfo, fameData>> trackedLocations;
+            map<RE::BGSLocation*, map<RE::TESGlobal*, fameData>> trackedLocations;
         };
+        RE::TESForm* currentAlias;
         map<RE::TESGlobal*, fameInfo> fame;
         map<RE::TESForm*, fameAlias> alias;
-        
+        map<RE::BGSLocation*, locationInfo> locations;
         static Gossip* getSingleton() {
             static Gossip* container;
             if (!container) container = new Gossip;
             return container;
         }
-
-        bool newFame(RE::StaticFunctionTag*, RE::TESGlobal* global, RE::BSString fameName);
-        bool newLocation(RE::StaticFunctionTag*, RE::BGSLocation* newLoc, RE::BSString locName);
         bool newFameAlias(RE::StaticFunctionTag*, RE::TESForm* fameAlias, RE::BSString aliasName);
+        bool newFame(RE::StaticFunctionTag*, RE::TESGlobal* global, RE::BSString fameName);
+        RE::TESGlobal* getFameGlobal(RE::StaticFunctionTag*, RE::BSString globalName);
+        RE::BSString getFameName(RE::StaticFunctionTag*, RE::TESGlobal* global);
+        std::vector<RE::TESGlobal*> getAllFameGlobals(RE::StaticFunctionTag*);
+        std::vector<RE::BSString> getAllFameNames(RE::StaticFunctionTag*);
 
-        int setFame(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, int amt, RE::BGSKeyword* alias);
-        int addFame(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, int amt, bool buffer, RE::BGSKeyword* alias);
-        int removeFame(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, int amt, bool buffer, RE::BGSKeyword* alias);
-        int modFame(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, int amt, RE::BGSKeyword* alias);
-        int getFame(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, RE::BGSKeyword* alias);
+        void setFameMin(RE::StaticFunctionTag*, RE::TESGlobal* global, int amt, RE::BGSLocation* newLoc);
+        void setFameMax(RE::StaticFunctionTag*, RE::TESGlobal* global, int amt, RE::BGSLocation* newLoc);
 
-        int setInterest(RE::StaticFunctionTag*, int amt);
-        int addInterest(RE::StaticFunctionTag*, int amt);
-        int removeInterest(RE::StaticFunctionTag*, int amt);
-        int modInterest(RE::StaticFunctionTag*, int amt);
-        int getInterest(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, RE::BGSKeyword* alias);
+        int setFame(RE::StaticFunctionTag*, RE::BGSKeyword* alias, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal,
+                    int amt);
+        int addFame(RE::StaticFunctionTag*, RE::BGSKeyword* alias, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal,
+                    int amt);
+        int removeFame(RE::StaticFunctionTag*, RE::BGSKeyword* alias, RE::BGSLocation* fameLoc,
+                       RE::TESGlobal* fameGlobal, int amt);
+        int getFame(RE::StaticFunctionTag*, RE::BGSKeyword* alias, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal);
+
+
+        bool newLocation(RE::StaticFunctionTag*, RE::BGSLocation* newLoc, RE::BSString locName);
+        std::vector<RE::BGSLocation*> getAllLocations(RE::StaticFunctionTag*);
+        std::vector<RE::BSString> getAllLocationNames(RE::StaticFunctionTag*);
+
         
-        int setTolerance(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, RE::BGSKeyword* alias, int amt);
-        int getTolerance(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, RE::BGSKeyword* alias);
-        int addTolerance(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, RE::BGSKeyword* alias, int amt);
-        int removeTolerance(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal,
-                            RE::BGSKeyword* alias, int amt);
-        int modTolerance(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal,
-                         RE::BGSKeyword* alias, int amt);
+        int setGossip(RE::StaticFunctionTag*, RE::BGSKeyword* alias, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, int amt);
+        int addGossip(RE::StaticFunctionTag*, RE::BGSKeyword* alias, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, int amt);
+        int removeGossip(RE::StaticFunctionTag*, RE::BGSKeyword* alias, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, int amt);
+        int getGossip(RE::StaticFunctionTag*, RE::BGSKeyword* alias, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal);
+
+        int setInterest(RE::StaticFunctionTag*, RE::BGSKeyword* alias, RE::BGSLocation* fameLoc, int amt);
+        int addInterest(RE::StaticFunctionTag*, RE::BGSKeyword* alias, RE::BGSLocation* fameLoc, int amt);
+        int removeInterest(RE::StaticFunctionTag*, RE::BGSKeyword* alias, RE::BGSLocation* fameLoc, int amt);
+        int getInterest(RE::StaticFunctionTag*, RE::BGSKeyword* alias, RE::BGSLocation* fameLoc);
+        
+        int setTolerance(RE::StaticFunctionTag*, RE::BGSKeyword* alias, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal,  int amt);
+        int getTolerance(RE::StaticFunctionTag*, RE::BGSKeyword* alias, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal);
+        int addTolerance(RE::StaticFunctionTag*, RE::BGSKeyword* alias, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal,  int amt);
+        int removeTolerance(RE::StaticFunctionTag*, RE::BGSKeyword* alias, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, int amt);
 
 
         static void onGameSaved(SKSE::SerializationInterface* evt);
