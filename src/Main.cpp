@@ -37,9 +37,9 @@ namespace {
         log::trace("Initializing cosave serialization...");
         auto* serde = GetSerializationInterface();
         serde->SetUniqueID(_byteswap_ulong('GSIP'));
-        serde->SetSaveCallback(gossip::fameObject::onGameSaved);
-        serde->SetRevertCallback(gossip::fameObject::onRevert);
-        serde->SetLoadCallback(gossip::fameObject::onGameLoad);
+        serde->SetSaveCallback(gossip::Gossip::onGameSaved);
+        serde->SetRevertCallback(gossip::Gossip::onRevert);
+        serde->SetLoadCallback(gossip::Gossip::onGameLoad);
         log::trace("Cosave serialization initialized.");
     }
     
