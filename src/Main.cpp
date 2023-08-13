@@ -38,21 +38,22 @@ namespace {
         auto* serde = GetSerializationInterface();
         serde->SetUniqueID(_byteswap_ulong('GSIP'));
         serde->SetSaveCallback(gossip::Gossip::onGameSaved);
+        
         serde->SetRevertCallback(gossip::Gossip::onRevert);
         serde->SetLoadCallback(gossip::Gossip::onGameLoad);
         log::trace("Cosave serialization initialized.");
     }
     
-    /*
+    
     void InitializePapyrus() {
         log::trace("Initializing Papyrus binding...");
-        if (GetPapyrusInterface()->Register(Sample::RegisterHitCounter)) {
+        if (GetPapyrusInterface()->Register(gossip::Gossip::papyrusRegister)) {
             log::debug("Papyrus functions bound.");
         } else {
             stl::report_and_fail("Failure to register Papyrus bindings.");
         }
     }
-    */
+    
 
 
     
@@ -72,8 +73,11 @@ namespace {
 
                 // Skyrim game events.
                 case MessagingInterface::kNewGame: // Player starts a new game from main menu.
-                case MessagingInterface::kPreLoadGame: // Player selected a game to load, but it hasn't loaded yet.
+                case MessagingInterface::kPreLoadGame: {  // Player selected a game to load, but it hasn't loaded yet.
                     // Data will be the name of the loaded save.
+                    auto handler = RE::TESDataHandler::GetSingleton();
+                    auto tempform = handler->LookupForm<RE::TESGlobal>(0x833, "Gossip.esp");
+                }
                 case MessagingInterface::kPostLoadGame: // Player's selected save game has finished loading.
                     // Data will be a boolean indicating whether the load was successful.
                 case MessagingInterface::kSaveGame: // The player has saved a game.
@@ -103,12 +107,12 @@ SKSEPluginLoad(const LoadInterface* skse) {
     auto* plugin = PluginDeclaration::GetSingleton();
     auto version = plugin->GetVersion();
     log::info("{} {} is loading...", plugin->GetName(), version);
-
+    gossip::Gossip::getSingleton();
 
     Init(skse);
     InitializeMessaging();
     InitializeSerialization();
-    //InitializePapyrus();
+    InitializePapyrus();
 
     log::info("{} has finished loading.", plugin->GetName());
     return true;
