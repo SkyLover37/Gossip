@@ -6,6 +6,28 @@ using namespace RE::BSScript;
 using namespace SKSE;
 using namespace SKSE::stl;
 
+
+void writeString(SKSE::SerializationInterface* evt, std::string string) {
+    std::size_t size = string.length() + 1;
+    evt->WriteRecordData(size);
+    evt->WriteRecordData(string.data(), static_cast<std::uint32_t>(size));
+}
+std::string readString(SKSE::SerializationInterface* evt) {
+    std::string name;
+    std::size_t strings;
+    evt->ReadRecordData(strings);
+    name.reserve(strings);
+    evt->ReadRecordData(name.data(), static_cast<std::uint32_t>(strings));
+    return name;
+}
+RE::TESForm* readForm(SKSE::SerializationInterface* evt){
+    RE::FormID oldForm;
+    RE::FormID newForm = 0;
+    evt->ReadRecordData(oldForm);
+    evt->ResolveFormID(oldForm, newForm);
+    logger::info("{:x},{:x}", oldForm, newForm);
+    return RE::TESForm::LookupByID(newForm);
+};
 namespace gossip {
     class Gossip {
         
@@ -20,6 +42,24 @@ namespace gossip {
             std::string name = "";
             RE::TESGlobal* fameGlobal = nullptr;
             fameInfo(){};
+            fameInfo(SKSE::SerializationInterface* evt, RE::TESGlobal* glob) : fameGlobal(glob) {
+ 
+                std::string name;
+                std::vector<std::string> tags;
+                
+                
+                evt->ReadRecordData(max);
+
+                evt->ReadRecordData(min);
+
+                std::size_t size;
+                evt->ReadRecordData(size);
+                for (int i = 0; i < size; ++i) {
+                    
+                    tags.push_back(readString(evt));
+                }
+                name = readString(evt);
+            }
             fameInfo(RE::TESGlobal* newForm, std::string name, int min, int max, std::vector<std::string> tags)
                 : fameGlobal(newForm), name(name), min(min), max(max), tags(tags) {
                 logger::info("New fame {} ", name);
@@ -33,7 +73,7 @@ namespace gossip {
                 std::size_t size = tags.size();
                 evt->WriteRecordData(size);
                 for (int i = 0; i < tags.size(); i++) {
-                    evt->WriteRecordData(tags[i]);
+                    writeString(evt, tags[i]);
                 }
                 size = name.length() + 1;
                 evt->WriteRecordData(size); 
@@ -47,25 +87,64 @@ namespace gossip {
 
 
         struct fameData {
-            fameInfo* info{};
             int fameValue{};
             int gossip{};
             bool localLimit{};
             int max = 100;
             int min = 0;
             fameData(){};
-            fameData(fameInfo* newInfo) : info(newInfo) {  };
+            fameData(SKSE::SerializationInterface* evt) { 
+                evt->ReadRecordData(fameValue);
+                evt->ReadRecordData(gossip);
+                evt->ReadRecordData(localLimit);
+                evt->ReadRecordData(max);
+                evt->ReadRecordData(min);
+            };
+            void save(SKSE::SerializationInterface* evt) { 
+                evt->WriteRecordData(fameValue);
+                evt->WriteRecordData(gossip);
+                evt->WriteRecordData(localLimit);
+                evt->WriteRecordData(max);
+                evt->WriteRecordData(min);
+            };
         };
         struct region {
             int interest;
             std::map<RE::TESGlobal*, fameData> fame;
+            region(){};
+            region(SKSE::SerializationInterface* evt) { evt->ReadRecordData(interest);
+                std::size_t size;
+                evt->ReadRecordData(size);
+                for (int i = 0; i < size; i++) {
+                    RE::TESGlobal* glob = readForm(evt)->As<RE::TESGlobal>();
+                    fame[glob] = fameData(evt);
+                }
+            }
+            void save(SKSE::SerializationInterface* evt) {
+                
+                evt->WriteRecordData(interest);
+                evt->WriteRecordData(fame.size());
+                for (auto& fame : fame) {
+                    evt->WriteRecordData(fame.first->formID);
+                    fame.second.save(evt);
+                }
+            }
         };
         struct fameAlias {
             std::string name = "";
-            RE::TESForm* form;
-            region* currentRegion;
+            RE::TESForm* form = nullptr;
             std::map<RE::BGSLocation*, region> known;
             fameAlias(){};
+            fameAlias(SKSE::SerializationInterface* evt){
+                name = readString(evt);
+                form = readForm(evt);
+                std::size_t size;
+                evt->ReadRecordData(size);
+                for (int i = 0; i < size; i++) {
+                    RE::BGSLocation* loc = readForm(evt)->As<RE::BGSLocation>();
+                    known[loc] = region(evt);
+                }
+            };
             fameAlias(std::string name, RE::TESForm* form) : name(name), form(form) {
                 for (auto& entry : Gossip::getSingleton()->trackedLocations) {
                     addLocation(entry);
@@ -73,15 +152,21 @@ namespace gossip {
             }
             void addLocation(RE::BGSLocation* akLoc) {
                 for (auto& fameEntry : Gossip::getSingleton()->fame) {
-                    known[akLoc].fame[fameEntry.first] = fameData(&fameEntry.second);
+                    known[akLoc].fame[fameEntry.first] = fameData();
                 }
             }
             void save(SKSE::SerializationInterface* evt) { 
                 if(!evt->OpenRecord('ALAS', 1)){
                 
                 }else{
-                    evt->WriteRecordData(name);
-                    evt->WriteRecordData(form->formID);
+                        writeString(evt, name);
+                        evt->WriteRecordData(form->formID);
+                        evt->WriteRecordData(known.size());
+                        for (auto& knownEntry : known) {
+                            evt->WriteRecordData(knownEntry.first->formID);
+                            knownEntry.second.save(evt);
+                        }
+                    
                     }
 
             }
@@ -92,18 +177,13 @@ namespace gossip {
                 std::uint32_t length;
                 RE::FormID oldForm;
                 bool error = false;
-
-                while (!error && evt->GetNextRecordInfo(type, version, length)) {
-                    if (type == 'ALAS') {
-                        evt->ReadRecordData(&oldForm, length);
-                        evt->ResolveFormID(oldForm, oldForm);
-                        form = RE::TESForm::LookupByID(oldForm);
-                        if (form) {
-                            logger::info("{} :: {}", form->GetName(), oldForm);
-                        } else
-                            logger::error("Failed to retrieve form :: {}", oldForm);
-                    }
-                }
+                evt->ReadRecordData(&oldForm, length);
+                evt->ResolveFormID(oldForm, oldForm);
+                form = RE::TESForm::LookupByID(oldForm);
+                if (form) {
+                    logger::info("{} :: {}", form->GetName(), oldForm);
+                } else
+                    logger::error("Failed to retrieve form :: {}", oldForm);
             }
             
         };

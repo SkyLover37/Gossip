@@ -15,8 +15,8 @@ namespace gossip {
         return true; 
     }
     RE::TESGlobal *Gossip::getFameGlobal(RE::StaticFunctionTag *, std::string globalName) { return nullptr; }
-    std::string Gossip::getFameName(RE::StaticFunctionTag *, RE::TESGlobal *global) { return std::string(); }
-    std::vector<RE::TESGlobal *> Gossip::getAllFameGlobals(RE::StaticFunctionTag *) {
+        std::string Gossip::getFameName(RE::StaticFunctionTag *, RE::TESGlobal *global) { return std::string(); }
+        std::vector<RE::TESGlobal *> Gossip::getAllFameGlobals(RE::StaticFunctionTag *) {
         return std::vector<RE::TESGlobal *>();
     }
     std::vector<std::string> Gossip::getAllFameNames(RE::StaticFunctionTag *) { return std::vector<std::string>(); }
@@ -101,6 +101,24 @@ namespace gossip {
                 famein.second.save(evt);
             }
         }
+        if (!evt->OpenRecord('ALAS', 1)) { 
+        }else {
+            evt->WriteRecordData(gossip->Alias.size());
+            for (auto& alias : gossip->Alias)
+            {
+                evt->WriteRecordData(alias.first->formID);
+                alias.second.save(evt);
+            }
+        }
+        if (!evt->OpenRecord('TLRC', 1)) {
+        
+        } else {
+            evt->WriteRecordData(gossip->regionTolerance.size());
+            for (auto &tolerance : gossip->regionTolerance) {
+                evt->WriteRecordData(tolerance.first->formID);
+                evt->WriteRecordData(tolerance.second);
+            }
+        }
         
     }
     void Gossip::onGameLoad(SKSE::SerializationInterface *evt) {
@@ -122,46 +140,33 @@ namespace gossip {
                     evt->ReadRecordData(size);
                     logger::info("fame count {}", size);
                     for (int i = 0; i < size; ++i) {
-                        logger::info("index {}", i);
-                        int max;
-                        int min;
-                        
-                        std::string name;
-                        std::vector<std::string> tags;
-                        RE::FormID oldForm;
-                        RE::FormID newForm = 0;
-                        evt->ReadRecordData(oldForm);
-                        evt->ResolveFormID(oldForm, newForm);
-                        logger::info("{:x},{:x}", oldForm, newForm);
-                        auto handler = RE::TESDataHandler::GetSingleton();
-                        auto tempform = RE::TESForm::LookupByID<RE::TESGlobal>(newForm);
-                        evt->ReadRecordData(max);
-
-                        evt->ReadRecordData(min);
-
-                        std::size_t size;
-                        evt->ReadRecordData(size);
-                        logger::info("{}", size);
-                        for (int i = 0; i < size; ++i) {
-                            std::string elem;
-                            evt->ReadRecordData(elem);
-                            tags.push_back(elem);
-                        }
-                        std::size_t strings;
-                        evt->ReadRecordData(strings);
-                        name.reserve(strings);
-                        evt->ReadRecordData(name.data(), static_cast<std::uint32_t>(strings));
-                        if (tempform != nullptr) {
-                            gossip->fame[tempform] =
-                               fameInfo(tempform, name, min, max, tags);
-                            logger::info("{}, {}, {}, {}, {}", max, min, tags.size(), name, tempform->GetFormType());
-
-                        } else {
-                            logger::info("Failed to retrieve a global");
-                        }
+                        RE::TESGlobal *tempform = readForm(evt)->As<RE::TESGlobal>();
+                        gossip->fame[tempform] = fameInfo(evt, tempform);
                         
                     }
+                    break;
                 }
+               case 'ALAS': {
+                    std::size_t size;
+                    evt->ReadRecordData(size);
+                    for (int i = 0; i < size; i++) {
+                        RE::TESForm *form = readForm(evt);
+                        gossip->Alias[form] = fameAlias(evt);
+                    }
+                    break;
+               }
+               case 'TLRC': {
+                    std::size_t size;
+                    evt->ReadRecordData(size);
+                    for (int i = 0; i < size; i++) {
+                        int tolerance;
+
+                        RE::BGSLocation *form = readForm(evt)->As<RE::BGSLocation>();
+                        evt->ReadRecordData(tolerance);
+                        gossip->regionTolerance[form] = tolerance; 
+                    }
+                    break;
+               }
                 
             }
         }
