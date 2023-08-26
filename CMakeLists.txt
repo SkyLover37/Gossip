@@ -21,7 +21,12 @@ configure_file(
         @ONLY)
 
 set(headers
-        include/Scandal.h)
+        include/Scandal.h
+        include/Region.h 
+        include/Fame.h
+        include/FameAlias.h
+        include/FameOrigin.h
+        include/Papyrus.h)
 
 set(sources
         src/Main.cpp
@@ -53,7 +58,6 @@ target_include_directories(${PROJECT_NAME}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/src>
         $<INSTALL_INTERFACE:src>)
-
 target_include_directories(${PROJECT_NAME}
         PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
@@ -62,8 +66,6 @@ target_precompile_headers(${PROJECT_NAME}
         PRIVATE
         src/PCH.h)
 
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/Sample"
-        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 install(TARGETS ${PROJECT_NAME}
         DESTINATION "${CMAKE_INSTALL_LIBDIR}")

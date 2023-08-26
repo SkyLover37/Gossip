@@ -15,8 +15,8 @@ namespace gossip {
         return true; 
     }
     RE::TESGlobal *Gossip::getFameGlobal(RE::StaticFunctionTag *, std::string globalName) { return nullptr; }
-        std::string Gossip::getFameName(RE::StaticFunctionTag *, RE::TESGlobal *global) { return std::string(); }
-        std::vector<RE::TESGlobal *> Gossip::getAllFameGlobals(RE::StaticFunctionTag *) {
+    std::string Gossip::getFameName(RE::StaticFunctionTag *, RE::TESGlobal *global) { return std::string(); }
+    std::vector<RE::TESGlobal *> Gossip::getAllFameGlobals(RE::StaticFunctionTag *) {
         return std::vector<RE::TESGlobal *>();
     }
     std::vector<std::string> Gossip::getAllFameNames(RE::StaticFunctionTag *) { return std::vector<std::string>(); }
@@ -41,9 +41,6 @@ namespace gossip {
     bool Gossip::newLocation(RE::StaticFunctionTag *, RE::BGSLocation *newLoc, std::string locName) { return false; }
     std::vector<RE::BGSLocation *> Gossip::getAllLocations(RE::StaticFunctionTag *) {
         return std::vector<RE::BGSLocation *>();
-    }
-    std::vector<std::string> Gossip::getAllLocationNames(RE::StaticFunctionTag *) {
-        return std::vector<std::string>();
     }
     int Gossip::setGossip(RE::StaticFunctionTag *, RE::BGSKeyword *alias, RE::BGSLocation *fameLoc,
                           RE::TESGlobal *fameGlobal, int amt) {
