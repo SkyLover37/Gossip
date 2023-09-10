@@ -1,41 +1,52 @@
-struct fameInfo {
-    int max = 100;
-    int min = 0;
-    std::vector<std::string> tags;
-    std::string name = "";
-    RE::TESGlobal* fameGlobal = nullptr;
-    fameInfo(){};
-    fameInfo(SKSE::SerializationInterface* evt, RE::TESGlobal* glob) : fameGlobal(glob) {
-        std::string name;
+namespace gossip {
+    struct fameInfo {
+        int max = 100;
+        int min = 0;
         std::vector<std::string> tags;
+        std::string name = "";
+        RE::TESGlobal* fameGlobal = nullptr;
+        fameInfo(){};
+        fameInfo(SKSE::SerializationInterface* evt, RE::TESGlobal* glob) : fameGlobal(glob) {
+            std::string name;
+            std::vector<std::string> tags;
 
-        evt->ReadRecordData(max);
+            evt->ReadRecordData(max);
 
-        evt->ReadRecordData(min);
+            evt->ReadRecordData(min);
 
-        std::size_t size;
-        evt->ReadRecordData(size);
-        for (int i = 0; i < size; ++i) {
-            tags.push_back(readString(evt));
+            std::size_t size;
+            evt->ReadRecordData(size);
+            for (int i = 0; i < size; ++i) {
+                tags.push_back(readString(evt));
+            }
+            name = readString(evt);
         }
-        name = readString(evt);
-    }
-    fameInfo(RE::TESGlobal* newForm, std::string name, int min, int max, std::vector<std::string> tags)
-        : fameGlobal(newForm), name(name), min(min), max(max), tags(tags) {
-        logger::info("New fame {} ", name);
-    }
-
-    void save(SKSE::SerializationInterface* evt) {
-        evt->WriteRecordData(fameGlobal->GetLocalFormID());
-        evt->WriteRecordData(max);
-        evt->WriteRecordData(min);
-        std::size_t size = tags.size();
-        evt->WriteRecordData(size);
-        for (int i = 0; i < tags.size(); i++) {
-            writeString(evt, tags[i]);
+        fameInfo(RE::TESGlobal* newForm, std::string name, int min, int max, std::vector<std::string> tags)
+            : fameGlobal(newForm), name(name), min(min), max(max), tags(tags) {
+            logger::info("New fame {} ", name);
         }
-        size = name.length() + 1;
-        evt->WriteRecordData(size);
-        evt->WriteRecordData(name.data(), static_cast<std::uint32_t>(size));
-    }
-};
+
+        void save(SKSE::SerializationInterface* evt) {
+            evt->WriteRecordData(fameGlobal->GetLocalFormID());
+            evt->WriteRecordData(max);
+            evt->WriteRecordData(min);
+            std::size_t size = tags.size();
+            evt->WriteRecordData(size);
+            for (int i = 0; i < tags.size(); i++) {
+                writeString(evt, tags[i]);
+            }
+            size = name.length() + 1;
+            evt->WriteRecordData(size);
+            evt->WriteRecordData(name.data(), static_cast<std::uint32_t>(size));
+        }
+        static int setInterest(RE::BGSLocation* fameLoc, int amt);
+        static int addInterest(RE::BGSLocation* fameLoc, int amt);
+        static int removeInterest(RE::BGSLocation* fameLoc, int amt);
+        static int getInterest(RE::BGSLocation* fameLoc);
+
+        static int setTolerance(RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, int amt);
+        static int getTolerance(RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal);
+        static int addTolerance(RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, int amt);
+        static int removeTolerance(RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, int amt);
+    };
+}  // namespace gossip

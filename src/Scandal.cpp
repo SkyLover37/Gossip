@@ -1,14 +1,13 @@
 #include "Scandal.h"
 namespace gossip {
     
-    bool Gossip::newFameAlias(RE::StaticFunctionTag *, RE::TESForm* akAlias, std::string aliasName) {
+    bool Gossip::newFameAlias(RE::StaticFunctionTag *, RE::TESFaction* akAlias, std::string aliasName) {
         
-        Gossip::getSingleton()->Alias[akAlias] = Gossip::fameAlias(aliasName, akAlias);
+        Gossip::getSingleton()->Alias[akAlias] = fameAlias(aliasName, akAlias);
 
         return true;
     }
     bool Gossip::newFame(RE::StaticFunctionTag *, RE::TESGlobal *global, std::string fameName, int min, int max, std::vector<std::string> tags) { 
-        if (Gossip::getSingleton()->busy) return false;
         if (!global) return false;
         Gossip::getSingleton()->fame[global] = fameInfo(global, fameName, min, max, tags);
         logger::info("New fame count: {}", Gossip::getSingleton()->fame.size());
@@ -20,71 +19,6 @@ namespace gossip {
         return std::vector<RE::TESGlobal *>();
     }
     std::vector<std::string> Gossip::getAllFameNames(RE::StaticFunctionTag *) { return std::vector<std::string>(); }
-    void Gossip::setFameMin(RE::StaticFunctionTag *, RE::TESGlobal *global, int amt, RE::BGSLocation *newLoc) {}
-    void Gossip::setFameMax(RE::StaticFunctionTag *, RE::TESGlobal *global, int amt, RE::BGSLocation *newLoc) {}
-    int Gossip::setFame(RE::StaticFunctionTag *, RE::BGSKeyword *alias, RE::BGSLocation *fameLoc,
-                        RE::TESGlobal *fameGlobal, int amt) {
-        return 0;
-    }
-    int Gossip::addFame(RE::StaticFunctionTag *, RE::BGSKeyword *alias, RE::BGSLocation *fameLoc,
-                        RE::TESGlobal *fameGlobal, int amt) {
-        return 0;
-    }
-    int Gossip::removeFame(RE::StaticFunctionTag *, RE::BGSKeyword *alias, RE::BGSLocation *fameLoc,
-                           RE::TESGlobal *fameGlobal, int amt) {
-        return 0;
-    }
-    int Gossip::getFame(RE::StaticFunctionTag *, RE::BGSKeyword *alias, RE::BGSLocation *fameLoc,
-                        RE::TESGlobal *fameGlobal) {
-        return 0;
-    }
-    bool Gossip::newLocation(RE::StaticFunctionTag *, RE::BGSLocation *newLoc, std::string locName) { return false; }
-    std::vector<RE::BGSLocation *> Gossip::getAllLocations(RE::StaticFunctionTag *) {
-        return std::vector<RE::BGSLocation *>();
-    }
-    int Gossip::setGossip(RE::StaticFunctionTag *, RE::BGSKeyword *alias, RE::BGSLocation *fameLoc,
-                          RE::TESGlobal *fameGlobal, int amt) {
-        return 0;
-    }
-    int Gossip::addGossip(RE::StaticFunctionTag *, RE::BGSKeyword *alias, RE::BGSLocation *fameLoc,
-                          RE::TESGlobal *fameGlobal, int amt) {
-        return 0;
-    }
-    int Gossip::removeGossip(RE::StaticFunctionTag *, RE::BGSKeyword *alias, RE::BGSLocation *fameLoc,
-                             RE::TESGlobal *fameGlobal, int amt) {
-        return 0;
-    }
-    int Gossip::getGossip(RE::StaticFunctionTag *, RE::BGSKeyword *alias, RE::BGSLocation *fameLoc,
-                          RE::TESGlobal *fameGlobal) {
-        return 0;
-    }
-    int Gossip::setInterest(RE::StaticFunctionTag *, RE::BGSKeyword *alias, RE::BGSLocation *fameLoc, int amt) {
-        return 0;
-    }
-    int Gossip::addInterest(RE::StaticFunctionTag *, RE::BGSKeyword *alias, RE::BGSLocation *fameLoc, int amt) {
-        return 0;
-    }
-    int Gossip::removeInterest(RE::StaticFunctionTag *, RE::BGSKeyword *alias, RE::BGSLocation *fameLoc, int amt) {
-        return 0;
-    }
-    int Gossip::getInterest(RE::StaticFunctionTag *, RE::BGSKeyword *alias, RE::BGSLocation *fameLoc) { return 0; }
-    int Gossip::setTolerance(RE::StaticFunctionTag *, RE::BGSKeyword *alias, RE::BGSLocation *fameLoc,
-                             RE::TESGlobal *fameGlobal, int amt) {
-        return 0;
-    }
-    int Gossip::getTolerance(RE::StaticFunctionTag *, RE::BGSKeyword *alias, RE::BGSLocation *fameLoc,
-                             RE::TESGlobal *fameGlobal) {
-        return 0;
-    }
-    int Gossip::addTolerance(RE::StaticFunctionTag *, RE::BGSKeyword *alias, RE::BGSLocation *fameLoc,
-                             RE::TESGlobal *fameGlobal, int amt) {
-        return 0;
-    }
-    int Gossip::removeTolerance(RE::StaticFunctionTag *, RE::BGSKeyword *alias, RE::BGSLocation *fameLoc,
-                                RE::TESGlobal *fameGlobal, int amt) {
-        return 0;
-    }
-    
     void Gossip::onGameSaved(SKSE::SerializationInterface *evt) {
         logger::info("Game save");
         Gossip *gossip = Gossip::getSingleton();
@@ -105,6 +39,14 @@ namespace gossip {
             {
                 evt->WriteRecordData(alias.first->formID);
                 alias.second.save(evt);
+            }
+        }
+        if (!evt->OpenRecord('PROF', 1)) {
+        
+        } else {
+            evt->WriteRecordData(gossip->npcProfile.size());
+            for (auto &profile : gossip->npcProfile) {
+                profile.second.save(evt);
             }
         }
         if (!evt->OpenRecord('TLRC', 1)) {
@@ -147,10 +89,19 @@ namespace gossip {
                     std::size_t size;
                     evt->ReadRecordData(size);
                     for (int i = 0; i < size; i++) {
-                        RE::TESForm *form = readForm(evt);
+                        RE::TESFaction *form = readForm(evt)->As<RE::TESFaction>();
                         gossip->Alias[form] = fameAlias(evt);
                     }
                     break;
+               }
+               case 'PROF': {
+                    std::size_t size;
+                    evt->ReadRecordData(size);
+                    for (int i = 0; i < size; i++) {
+                        fameProfile akProfile(evt);
+                        gossip->npcProfile[akProfile.akActor] = akProfile;
+                    }
+                   break;
                }
                case 'TLRC': {
                     std::size_t size;
@@ -159,8 +110,8 @@ namespace gossip {
                         int tolerance;
 
                         RE::BGSLocation *form = readForm(evt)->As<RE::BGSLocation>();
-                        evt->ReadRecordData(tolerance);
-                        gossip->regionTolerance[form] = tolerance; 
+                        valueData tol(evt);
+                        gossip->regionTolerance[form] = tol; 
                     }
                     break;
                }

@@ -26,11 +26,19 @@ set(headers
         include/Fame.h
         include/FameAlias.h
         include/FameOrigin.h
-        include/Papyrus.h)
+        include/Papyrus.h
+        include/serializationUtil.h
+        include/Library/API_ActorValueGenerator.h
+        include/Library/API_Arithmetic.h)
 
 set(sources
         src/Main.cpp
         src/Scandal.cpp
+        src/Region.cpp 
+        src/Fame.cpp 
+        src/FameAlias.cpp 
+        src/FameOrigin.cpp 
+        src/Papyrus.cpp 
         ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 
 source_group(
@@ -99,7 +107,7 @@ set_property(TARGET ${PROJECT_NAME}
         APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${OUTPUT_SCRIPTS}")
 
 # Automatic deployment to Mod Organizer 2 mod directory.
-foreach (DEPLOY_TARGET $ENV{GossipEvents})
+foreach (DEPLOY_TARGET $ENV{Gossip})
     message("Adding deployment target ${DEPLOY_TARGET}.")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> "${DEPLOY_TARGET}/SKSE/Plugins/")
