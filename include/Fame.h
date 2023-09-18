@@ -26,14 +26,16 @@ namespace gossip {
             evt->WriteRecordData(value);
             evt->WriteRecordData(max);
             evt->WriteRecordData(min);
-        };
-        int setValue(RE::BGSKeyword* alias, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, int amt);
-        int addValue(RE::BGSKeyword* alias, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, int amt);
-        int removeValue(RE::BGSKeyword* alias, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, int amt);
-        int getValue(RE::BGSKeyword* alias, RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal);
 
-        void setValueMin(RE::StaticFunctionTag*, RE::TESGlobal* global, int amt, RE::BGSLocation* newLoc);
-        void setValueMax(RE::StaticFunctionTag*, RE::TESGlobal* global, int amt, RE::BGSLocation* newLoc);
+        };
+        int setValue(int amt);
+        int addValue(int amt);
+        int removeValue(int amt);
+        int getValue();
+        void setValueMin(int amt);
+        void setValueMax(int amt);
+        int getValueMin();
+        int getValueMax();
 
     };
 }  // namespace goszsip

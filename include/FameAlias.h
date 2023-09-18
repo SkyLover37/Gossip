@@ -27,7 +27,10 @@ namespace gossip {
            
         }
         void save(SKSE::SerializationInterface* evt);
-        
+        int setInterest(RE::BGSLocation* fameLoc, int amt);
+        int addInterest(RE::BGSLocation* fameLoc, int amt);
+        int removeInterest(RE::BGSLocation* fameLoc, int amt);
+        int getInterest(RE::BGSLocation* fameLoc);
     };
     struct fameProfile {
         RE::TESObjectREFR* akActor;
@@ -35,7 +38,7 @@ namespace gossip {
         int depravity;
         int disGood;
         int disBad;
-        std::map<fameAlias*, int> interest;
+        std::map<fameAlias*, valueData> interest;
         fameProfile(RE::TESObjectREFR* akActor) : akActor(akActor) {}
         fameProfile(SKSE::SerializationInterface* evt) {
             akActor = readForm(evt)->As<RE::TESObjectREFR>();
@@ -46,13 +49,17 @@ namespace gossip {
             size_t size;
             evt->ReadRecordData(size);
             for (int i = 0; i < size; ++i) {
-                int storedInterest;
+                
                 fameAlias* alias = &Gossip::getSingleton()->Alias[readForm(evt)->As<RE::TESFaction>()];
                 
-                evt->ReadRecordData(storedInterest);
-                interest[alias] = storedInterest;
+                
+                interest[alias] = valueData(evt);
             }
         }
         void save(SKSE::SerializationInterface* evt);
+        int setInterest(RE::BGSLocation* fameLoc, int amt);
+        int addInterest(RE::BGSLocation* fameLoc, int amt);
+        int removeInterest(RE::BGSLocation* fameLoc, int amt);
+        int getInterest(RE::BGSLocation* fameLoc);
     };
 }  // namespace gossip

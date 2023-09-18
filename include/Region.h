@@ -18,9 +18,6 @@ namespace gossip {
             }
         }
         void save(SKSE::SerializationInterface* evt);
-        int setInterest(RE::BGSLocation* fameLoc, int amt);
-        int addInterest(RE::BGSLocation* fameLoc, int amt);
-        int removeInterest(RE::BGSLocation* fameLoc, int amt);
-        int getInterest(RE::BGSLocation* fameLoc);
+        
     };
 }  // namespace gossip

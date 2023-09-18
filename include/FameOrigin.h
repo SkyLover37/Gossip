@@ -39,14 +39,9 @@ namespace gossip {
             evt->WriteRecordData(size);
             evt->WriteRecordData(name.data(), static_cast<std::uint32_t>(size));
         }
-        static int setInterest(RE::BGSLocation* fameLoc, int amt);
-        static int addInterest(RE::BGSLocation* fameLoc, int amt);
-        static int removeInterest(RE::BGSLocation* fameLoc, int amt);
-        static int getInterest(RE::BGSLocation* fameLoc);
-
-        static int setTolerance(RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, int amt);
-        static int getTolerance(RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal);
-        static int addTolerance(RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, int amt);
-        static int removeTolerance(RE::BGSLocation* fameLoc, RE::TESGlobal* fameGlobal, int amt);
+        void setValueMin(int amt);
+        void setValueMax(int amt);
+        int getValueMin();
+        int getValueMax();
     };
 }  // namespace gossip
