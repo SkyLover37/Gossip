@@ -1,3 +1,4 @@
+#include <Region.h>
 namespace gossip {
     void region::save(SKSE::SerializationInterface* evt) {
         evt->WriteRecordData(interest);

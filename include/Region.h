@@ -1,3 +1,6 @@
+#pragma once
+#include <Fame.h>
+
 namespace gossip {
     struct region {
         int interest;

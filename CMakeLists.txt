@@ -27,9 +27,7 @@ set(headers
         include/FameAlias.h
         include/FameOrigin.h
         include/Papyrus.h
-        include/serializationUtil.h
-        include/Library/API_ActorValueGenerator.h
-        include/Library/API_Arithmetic.h)
+        include/serializationUtil.h)
 
 set(sources
         src/Main.cpp
@@ -39,6 +37,7 @@ set(sources
         src/FameAlias.cpp 
         src/FameOrigin.cpp 
         src/Papyrus.cpp 
+        src/serializationUtil.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 
 source_group(

@@ -1,3 +1,5 @@
+#pragma once
+#include <FameOrigin.h>
 namespace gossip {
     enum valueType { 
         tolerance,
@@ -12,6 +14,7 @@ namespace gossip {
         bool localLimit;
         int max = 100;
         int min = 0;
+        valueData() {}
         valueData(valueType type) : type(type) {};
         valueData(SKSE::SerializationInterface* evt) {
             evt->ReadRecordData(type);
@@ -31,6 +34,7 @@ namespace gossip {
         int setValue(int amt);
         int addValue(int amt);
         int removeValue(int amt);
+        int modValue(int amt);
         int getValue();
         void setValueMin(int amt);
         void setValueMax(int amt);

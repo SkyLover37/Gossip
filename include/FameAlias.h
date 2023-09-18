@@ -1,3 +1,5 @@
+#pragma once
+#include <Region.h>
 
 namespace gossip {
     
@@ -23,9 +25,7 @@ namespace gossip {
                 known[loc] = region(evt);
             }
         };
-        fameAlias(std::string name, RE::TESForm* form) : name(name), form(form) {
-           
-        }
+        
         void save(SKSE::SerializationInterface* evt);
         int setInterest(RE::BGSLocation* fameLoc, int amt);
         int addInterest(RE::BGSLocation* fameLoc, int amt);
@@ -34,28 +34,14 @@ namespace gossip {
     };
     struct fameProfile {
         RE::TESObjectREFR* akActor;
-        float viewingTime;
-        int depravity;
-        int disGood;
-        int disBad;
+        float viewingTime = 0;
+        int depravity = 0;
+        int disGood = 0;
+        int disBad = 0;
         std::map<fameAlias*, valueData> interest;
+        fameProfile(){};
         fameProfile(RE::TESObjectREFR* akActor) : akActor(akActor) {}
-        fameProfile(SKSE::SerializationInterface* evt) {
-            akActor = readForm(evt)->As<RE::TESObjectREFR>();
-            evt->ReadRecordData(viewingTime);
-            evt->ReadRecordData(depravity);
-            evt->ReadRecordData(disGood);
-            evt->ReadRecordData(disBad);
-            size_t size;
-            evt->ReadRecordData(size);
-            for (int i = 0; i < size; ++i) {
-                
-                fameAlias* alias = &Gossip::getSingleton()->Alias[readForm(evt)->As<RE::TESFaction>()];
-                
-                
-                interest[alias] = valueData(evt);
-            }
-        }
+        fameProfile(SKSE::SerializationInterface* evt);
         void save(SKSE::SerializationInterface* evt);
         int setInterest(RE::BGSLocation* fameLoc, int amt);
         int addInterest(RE::BGSLocation* fameLoc, int amt);

@@ -1,3 +1,5 @@
+#pragma once
+#include <serializationUtil.h>
 namespace gossip {
     struct fameInfo {
         int max = 100;

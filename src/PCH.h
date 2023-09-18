@@ -99,8 +99,7 @@
 #include <SKSE/SKSE.h>
 #include <REL/Relocation.h>
 
-#include <Scandal.h>
-#include <serializationUtil.h>
+#include <SKSE\Interfaces.h>
 
 #include <ShlObj_core.h>
 #include <Windows.h>

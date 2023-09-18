@@ -1,6 +1,6 @@
-
+#pragma once
 #include <stddef.h>
-#include "Scandal.h"
+//#include <Papyrus.h>
 using namespace RE::BSScript;
 using namespace SKSE;
 using namespace SKSE::log;
@@ -37,17 +37,17 @@ namespace {
         log::trace("Initializing cosave serialization...");
         auto* serde = GetSerializationInterface();
         serde->SetUniqueID(_byteswap_ulong('GSIP'));
-        serde->SetSaveCallback(gossip::Gossip::onGameSaved);
+        //serde->SetSaveCallback(gossip::Gossip::onGameSaved);
         
-        serde->SetRevertCallback(gossip::Gossip::onRevert);
-        serde->SetLoadCallback(gossip::Gossip::onGameLoad);
+        //serde->SetRevertCallback(gossip::Gossip::onRevert);
+        //serde->SetLoadCallback(gossip::Gossip::onGameLoad);
         log::trace("Cosave serialization initialized.");
     }
     
     
     void InitializePapyrus() {
         log::trace("Initializing Papyrus binding...");
-        if (GetPapyrusInterface()->Register(gossip::Gossip::papyrusRegister)) {
+        if (true){//GetPapyrusInterface()->Register(gossip::papyrusRegister)) {
             log::debug("Papyrus functions bound.");
         } else {
             stl::report_and_fail("Failure to register Papyrus bindings.");
@@ -107,7 +107,7 @@ SKSEPluginLoad(const LoadInterface* skse) {
     auto* plugin = PluginDeclaration::GetSingleton();
     auto version = plugin->GetVersion();
     log::info("{} {} is loading...", plugin->GetName(), version);
-    gossip::Gossip::getSingleton();
+    //gossip::Gossip::getSingleton();
 
     Init(skse);
     InitializeMessaging();

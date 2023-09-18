@@ -1,24 +1,6 @@
 #include "Scandal.h"
 namespace gossip {
     
-    bool Gossip::newFameAlias(RE::StaticFunctionTag *, RE::TESFaction* akAlias, std::string aliasName) {
-        
-        Gossip::getSingleton()->Alias[akAlias] = fameAlias(aliasName, akAlias);
-
-        return true;
-    }
-    bool Gossip::newFame(RE::StaticFunctionTag *, RE::TESGlobal *global, std::string fameName, int min, int max, std::vector<std::string> tags) { 
-        if (!global) return false;
-        Gossip::getSingleton()->fame[global] = fameInfo(global, fameName, min, max, tags);
-        logger::info("New fame count: {}", Gossip::getSingleton()->fame.size());
-        return true; 
-    }
-    RE::TESGlobal *Gossip::getFameGlobal(RE::StaticFunctionTag *, std::string globalName) { return nullptr; }
-    std::string Gossip::getFameName(RE::StaticFunctionTag *, RE::TESGlobal *global) { return std::string(); }
-    std::vector<RE::TESGlobal *> Gossip::getAllFameGlobals(RE::StaticFunctionTag *) {
-        return std::vector<RE::TESGlobal *>();
-    }
-    std::vector<std::string> Gossip::getAllFameNames(RE::StaticFunctionTag *) { return std::vector<std::string>(); }
     void Gossip::onGameSaved(SKSE::SerializationInterface *evt) {
         logger::info("Game save");
         Gossip *gossip = Gossip::getSingleton();

@@ -1,12 +1,8 @@
 #pragma once
 
-#include <RE/Skyrim.h>
-#include <SKSE\Interfaces.h>
-#include <Region.h>
-#include <Fame.h>
 #include <FameAlias.h>
-#include <FameOrigin.h>
-#include <Papyrus.h>
+
+
 using namespace RE::BSScript;
 using namespace SKSE;
 using namespace SKSE::stl;
@@ -19,8 +15,8 @@ namespace gossip {
     public:
         std::vector<RE::BGSLocation*> trackedLocations;
         std::map<RE::TESGlobal*, fameInfo> fame;
-        fameAlias* currentFameAlias = nullptr;
-        region* currentRegion = nullptr;
+        fameAlias* currentFameAlias;
+        region* currentRegion;
         std::map<RE::TESFaction*, fameAlias> Alias{};
         std::map<RE::BGSLocation*, valueData> regionTolerance{};
         std::map<RE::TESObjectREFR*, fameProfile> npcProfile;

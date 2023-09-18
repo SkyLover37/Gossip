@@ -1,7 +1,20 @@
 #include "FameAlias.h"
-
-
+//#include <Scandal.h>
 namespace gossip {
+    fameProfile::fameProfile(SKSE::SerializationInterface* evt) {
+        akActor = readForm(evt)->As<RE::TESObjectREFR>();
+        evt->ReadRecordData(viewingTime);
+        evt->ReadRecordData(depravity);
+        evt->ReadRecordData(disGood);
+        evt->ReadRecordData(disBad);
+        size_t size;
+        evt->ReadRecordData(size);
+        for (int i = 0; i < size; ++i) {
+            fameAlias* alias;// = &Gossip::getSingleton()->Alias[readForm(evt)->As<RE::TESFaction>()];
+
+            interest[alias] = valueData(evt);
+        }
+    }
     void fameProfile::save(SKSE::SerializationInterface* evt) {
         if (!evt->OpenRecord('PROF', 1)) {
         } else {
@@ -18,7 +31,7 @@ namespace gossip {
             }
         } 
     }
-    int fameProfile::setInterest(RE::BGSLocation* fameLoc, int amt) {}
+    int fameProfile::setInterest(RE::BGSLocation* fameLoc, int amt) { return 0; }
     int fameProfile::addInterest(RE::BGSLocation* fameLoc, int amt) { return 0; }
     int fameProfile::removeInterest(RE::BGSLocation* fameLoc, int amt) { return 0; }
     int fameProfile::getInterest(RE::BGSLocation* fameLoc) { return 0; }
