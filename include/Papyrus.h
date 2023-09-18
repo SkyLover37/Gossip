@@ -15,15 +15,22 @@ namespace gossip {
 
     std::vector<RE::BGSLocation*> getAllLocations(RE::StaticFunctionTag*);
 
-    int getGossipValue(RE::StaticFunctionTag*, RE::TESGlobal* valueKey, int amt, RE::TESFaction* fameAlias);
-    int setGossipValue(RE::StaticFunctionTag*, RE::TESGlobal* valueKey, int amt, RE::TESFaction* fameAlias);  
-    int removeGossipValue(RE::StaticFunctionTag*, RE::TESGlobal* valueKey, int amt, RE::TESFaction* fameAlias);  
-    int addGossipValue(RE::StaticFunctionTag*, RE::TESGlobal* valueKey, int amt, RE::TESFaction* fameAlias);
+    int getGossipValue(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* valueKey, int amt, RE::TESFaction* fameAlias);
+    int setGossipValue(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* valueKey, int amt,
+                       RE::TESFaction* fameAlias);  
+    int removeGossipValue(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* valueKey, int amt,
+                          RE::TESFaction* fameAlias);  
+    int addGossipValue(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* valueKey, int amt,
+                       RE::TESFaction* fameAlias);
 
-    int getFameValue(RE::StaticFunctionTag*, RE::TESGlobal* valueKey, int amt, RE::TESFaction* fameAlias);  
-    int setFameValue(RE::StaticFunctionTag*, RE::TESGlobal* valueKey, int amt, RE::TESFaction* fameAlias);
-    int removeFameValue(RE::StaticFunctionTag*, RE::TESGlobal* valueKey, int amt, RE::TESFaction* fameAlias);   
-    int addFameValue(RE::StaticFunctionTag*, RE::TESGlobal* valueKey, int amt, RE::TESFaction* fameAlias);
+    int getFameValue(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* valueKey, int amt,
+                     RE::TESFaction* fameAlias);  
+    int setFameValue(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* valueKey, int amt,
+                     RE::TESFaction* fameAlias);
+    int removeFameValue(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* valueKey, int amt,
+                        RE::TESFaction* fameAlias);   
+    int addFameValue(RE::StaticFunctionTag*, RE::BGSLocation* fameLoc, RE::TESGlobal* valueKey, int amt,
+                     RE::TESFaction* fameAlias);
 
     //std::vector<std::string> getAllLocationNames(RE::StaticFunctionTag*);
     int setInterest(RE::StaticFunctionTag*, RE::TESFaction* actorAlias, RE::BGSLocation* fameLoc, int amt);
