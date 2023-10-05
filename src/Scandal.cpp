@@ -1,6 +1,37 @@
 #include "Scandal.h"
 namespace gossip {
-    
+    RE::BGSLocation *Gossip::checkLocation(RE::BGSLocation *checkLoc, bool checkParent) { 
+        RE::BGSLocation *newLoc;
+        if (std::find(trackedLocations.begin(), trackedLocations.end(), checkLoc) != trackedLocations.end()) {
+            return checkLoc;
+        } else if (checkParent && std::find(trackedLocations.begin(), trackedLocations.end(), newLoc = checkLoc->parentLoc) != trackedLocations.end()) {
+            return newLoc;
+        }
+        return nullptr;
+    }
+
+    valueData *Gossip::getInterest() { return currentRegion->getInterest(); }
+
+    valueData *Gossip::getInterest(RE::BGSLocation *akLoc, RE::TESFaction *alias) {
+        return Alias[alias].known[akLoc].getInterest();
+    }
+
+    valueData *Gossip::getInterest(RE::BGSLocation *akLoc) { return currentFameAlias->known[akLoc].getInterest(); }
+   
+    valueData *Gossip::getValueObj(valueType valueType, RE::TESGlobal* global) { 
+        return &currentRegion->fame[global][valueType];
+    }
+    valueData *Gossip::getValueObj(valueType valueType, RE::BGSLocation *loc, RE::TESGlobal *global) { 
+        return &currentFameAlias->known[loc].fame[global][valueType];
+    }
+    valueData *Gossip::getValueObj(valueType valueType, RE::TESFaction *fac, RE::BGSLocation *Loc,
+                                   RE::TESGlobal *global) {
+        return &Alias[fac].known[Loc].fame[global][valueType];
+    }
+    bool Gossip::setState(bool active) { 
+        o_gossip.active = active;
+        return o_gossip.active;
+    }
     void Gossip::onGameSaved(SKSE::SerializationInterface *evt) {
         logger::info("Game save");
         Gossip *gossip = Gossip::getSingleton();
@@ -45,7 +76,7 @@ namespace gossip {
     void Gossip::onGameLoad(SKSE::SerializationInterface *evt) {
         
         
-        Gossip *gossip = Gossip::getSingleton();
+        o_gossip = Gossip();
        // gossip->busy = true;
         std::uint32_t type;
         std::uint32_t version;
@@ -61,8 +92,12 @@ namespace gossip {
                     evt->ReadRecordData(size);
                     logger::info("fame count {}", size);
                     for (int i = 0; i < size; ++i) {
-                        RE::TESGlobal *tempform = readForm(evt)->As<RE::TESGlobal>();
-                        gossip->fame[tempform] = fameInfo(evt, tempform);
+                        RE::TESForm* tempf = readForm(evt);
+                        auto info = fameInfo(evt, tempf);
+                        if (!tempf) continue;
+                    
+                        log::debug("Retrieved fame {}", info.fameGlobal->GetName());
+                        o_gossip.fame[info.fameGlobal] = info; 
                         
                     }
                     break;
@@ -71,8 +106,11 @@ namespace gossip {
                     std::size_t size;
                     evt->ReadRecordData(size);
                     for (int i = 0; i < size; i++) {
-                        RE::TESFaction *form = readForm(evt)->As<RE::TESFaction>();
-                        gossip->Alias[form] = fameAlias(evt);
+                        auto form = readForm(evt);
+                        auto alias = fameAlias(evt);
+                        if (!form) continue;
+                        RE::TESFaction *fac = form->As<RE::TESFaction>();
+                        o_gossip.Alias[fac] = alias; 
                     }
                     break;
                }
@@ -81,7 +119,8 @@ namespace gossip {
                     evt->ReadRecordData(size);
                     for (int i = 0; i < size; i++) {
                         fameProfile akProfile(evt);
-                        gossip->npcProfile[akProfile.akActor] = akProfile;
+                        if (!akProfile.akActor) continue;
+                        o_gossip.npcProfile[akProfile.akActor] = akProfile;
                     }
                    break;
                }
@@ -90,10 +129,12 @@ namespace gossip {
                     evt->ReadRecordData(size);
                     for (int i = 0; i < size; i++) {
                         int tolerance;
-
-                        RE::BGSLocation *form = readForm(evt)->As<RE::BGSLocation>();
+                        auto form = readForm(evt);
                         valueData tol(evt);
-                        gossip->regionTolerance[form] = tol; 
+                        if (!form) continue;
+                        RE::BGSLocation *loc = form->As<RE::BGSLocation>();
+                        
+                        o_gossip.regionTolerance[loc] = tol; 
                     }
                     break;
                }
@@ -102,5 +143,5 @@ namespace gossip {
         }
         //gossip->busy = false;
     }
-    void Gossip::onRevert(SKSE::SerializationInterface *evt) {}
+    void Gossip::onRevert(SKSE::SerializationInterface *evt) { o_gossip = Gossip(); }
 }  // namespace gossip

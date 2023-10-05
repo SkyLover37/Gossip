@@ -35,6 +35,10 @@ namespace gossip {
     int fameProfile::addInterest(RE::BGSLocation* fameLoc, int amt) { return 0; }
     int fameProfile::removeInterest(RE::BGSLocation* fameLoc, int amt) { return 0; }
     int fameProfile::getInterest(RE::BGSLocation* fameLoc) { return 0; }
+    void fameProfile::clearValues(valueType type, RE::BGSLocation* akLoc, RE::TESFaction* akAlias) {
+    
+
+    }
     void fameAlias::save(SKSE::SerializationInterface* evt) {
         if (!evt->OpenRecord('ALAS', 1)) {
         } else {
@@ -48,8 +52,11 @@ namespace gossip {
             }
         }
     }
-    int fameAlias::setInterest(RE::BGSLocation* fameLoc, int amt) { return 0; }
-    int fameAlias::addInterest(RE::BGSLocation* fameLoc, int amt) { return 0; }
-    int fameAlias::removeInterest(RE::BGSLocation* fameLoc, int amt) { return 0; }
-    int fameAlias::getInterest(RE::BGSLocation* fameLoc) { return 0; }
+    region* fameAlias::getRegion(RE::BGSLocation* loc) { return &known[loc]; }
+   
+
+    valueData* fameAlias::getValueObject(valueType val, RE::BGSLocation* loc, RE::TESGlobal* global) {
+        return &known[loc].fame[global][val];
+    }
+   
 }  // namespace gossip

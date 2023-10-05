@@ -8,10 +8,13 @@ namespace gossip {
         std::string name = "";
         RE::TESGlobal* fameGlobal = nullptr;
         fameInfo(){};
-        fameInfo(SKSE::SerializationInterface* evt, RE::TESGlobal* glob) : fameGlobal(glob) {
+        template <typename T>
+        fameInfo(SKSE::SerializationInterface* evt, T* glob) {
             std::string name;
             std::vector<std::string> tags;
-
+            if (glob) {
+                fameGlobal = glob->As<RE::TESGlobal>();
+            }
             evt->ReadRecordData(max);
 
             evt->ReadRecordData(min);
@@ -29,7 +32,7 @@ namespace gossip {
         }
 
         void save(SKSE::SerializationInterface* evt) {
-            evt->WriteRecordData(fameGlobal->GetLocalFormID());
+            evt->WriteRecordData(fameGlobal->GetFormID());
             evt->WriteRecordData(max);
             evt->WriteRecordData(min);
             std::size_t size = tags.size();

@@ -116,6 +116,20 @@ using namespace std::literals;
 using namespace REL::literals;
 
 namespace logger = SKSE::log;
+#define SINGLETONHEADER(cname)             \
+public:                                    \
+    cname(cname&) = delete;                \
+    void operator=(const cname&) = delete; \
+    static cname* GetSingleton();          \
+                                           \
+protected:                                 \
+    cname() {}                             \
+    ~cname() {}                            \
+    static cname* _this;
+
+#define SINGLETONBODY(cname)         \
+    cname* cname::_this = new cname; \
+    cname* cname::GetSingleton() { return _this; }
 
 namespace util {
     using SKSE::stl::report_and_fail;

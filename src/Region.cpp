@@ -1,7 +1,8 @@
 #include <Region.h>
 namespace gossip {
     void region::save(SKSE::SerializationInterface* evt) {
-        evt->WriteRecordData(interest);
+        interest.save(evt);
+        evt->WriteRecordData(form->formID);
         evt->WriteRecordData(fame.size());
         for (auto& fame : fame) {
             evt->WriteRecordData(fame.first->formID);
@@ -11,4 +12,5 @@ namespace gossip {
             }
         }
     }
+    valueData* region::getInterest() { return &interest; }
 }  // namespace gossip

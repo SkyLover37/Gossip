@@ -3,12 +3,14 @@
 
 namespace gossip {
     struct region {
-        int interest;
+        valueData interest;
+        RE::TESForm* form;
         typedef std::map<valueType, valueData> fameGroup;
         std::map<RE::TESGlobal*, fameGroup> fame;
         region(){};
         region(SKSE::SerializationInterface* evt) {
-            evt->ReadRecordData(interest);
+            interest = valueData(evt);
+            form = readForm(evt);
             std::size_t size;
             evt->ReadRecordData(size);
             for (int i = 0; i < size; i++) {
@@ -21,6 +23,6 @@ namespace gossip {
             }
         }
         void save(SKSE::SerializationInterface* evt);
-        
+        valueData* getInterest();
     };
 }  // namespace gossip

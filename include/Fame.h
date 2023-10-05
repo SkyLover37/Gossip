@@ -40,6 +40,7 @@ namespace gossip {
         void setValueMax(int amt);
         int getValueMin();
         int getValueMax();
+        
 
     };
 }  // namespace goszsip

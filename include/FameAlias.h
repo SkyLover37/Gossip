@@ -27,10 +27,8 @@ namespace gossip {
         };
         
         void save(SKSE::SerializationInterface* evt);
-        int setInterest(RE::BGSLocation* fameLoc, int amt);
-        int addInterest(RE::BGSLocation* fameLoc, int amt);
-        int removeInterest(RE::BGSLocation* fameLoc, int amt);
-        int getInterest(RE::BGSLocation* fameLoc);
+        region* getRegion(RE::BGSLocation* loc);
+        valueData* getValueObject(valueType val, RE::BGSLocation* loc, RE::TESGlobal* global);
     };
     struct fameProfile {
         RE::TESObjectREFR* akActor;
@@ -47,5 +45,6 @@ namespace gossip {
         int addInterest(RE::BGSLocation* fameLoc, int amt);
         int removeInterest(RE::BGSLocation* fameLoc, int amt);
         int getInterest(RE::BGSLocation* fameLoc);
+        void clearValues(valueType type, RE::BGSLocation* akLoc, RE::TESFaction* akAlias);
     };
 }  // namespace gossip

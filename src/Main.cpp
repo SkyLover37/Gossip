@@ -1,6 +1,8 @@
 #pragma once
 #include <stddef.h>
-//#include <Papyrus.h>
+#include <Papyrus.h>
+#include <versionlibdb.h>
+#include <Hooks.h>
 using namespace RE::BSScript;
 using namespace SKSE;
 using namespace SKSE::log;
@@ -37,17 +39,17 @@ namespace {
         log::trace("Initializing cosave serialization...");
         auto* serde = GetSerializationInterface();
         serde->SetUniqueID(_byteswap_ulong('GSIP'));
-        //serde->SetSaveCallback(gossip::Gossip::onGameSaved);
+        serde->SetSaveCallback(gossip::Gossip::onGameSaved);
         
-        //serde->SetRevertCallback(gossip::Gossip::onRevert);
-        //serde->SetLoadCallback(gossip::Gossip::onGameLoad);
+        serde->SetRevertCallback(gossip::Gossip::onRevert);
+        serde->SetLoadCallback(gossip::Gossip::onGameLoad);
         log::trace("Cosave serialization initialized.");
     }
     
     
     void InitializePapyrus() {
         log::trace("Initializing Papyrus binding...");
-        if (true){//GetPapyrusInterface()->Register(gossip::papyrusRegister)) {
+        if (GetPapyrusInterface()->Register(gossip::papyrusRegister)) {
             log::debug("Papyrus functions bound.");
         } else {
             stl::report_and_fail("Failure to register Papyrus bindings.");
@@ -77,6 +79,7 @@ namespace {
                     // Data will be the name of the loaded save.
                     auto handler = RE::TESDataHandler::GetSingleton();
                     auto tempform = handler->LookupForm<RE::TESGlobal>(0x833, "Gossip.esp");
+                    
                 }
                 case MessagingInterface::kPostLoadGame: // Player's selected save game has finished loading.
                     // Data will be a boolean indicating whether the load was successful.
@@ -89,8 +92,37 @@ namespace {
             stl::report_and_fail("Unable to register message listener.");
         }
     }
-}
+}  // namespace
 
+bool DumpSpecificVersion() {
+    VersionDb db;
+
+    // Try to load database of version 1.5.62.0 regardless of running executable version.
+    if (!db.Load(1, 6, 640, 0)) {
+        //_FATALERROR("Failed to load database for 1.5.62.0!");
+        return false;
+    }
+
+    // Write out a file called offsets-1.5.62.0.txt where each line is the ID and offset.
+    db.Dump("offsets-1.6.640.0.txt");
+    //_MESSAGE("Dumped offsets for 1.5.62.0");
+    return true;
+}
+/*
+class UpdatePCHook {
+public:
+    static void Install() {
+        REL::Relocation<std::uintptr_t> playerCharacterVTable{RE::VTABLE_PlayerCharacter[0]};
+        UpdatePC = playerCharacterVTable.write_vfunc(0xAD, UpdatePCMod);
+    }
+private:
+    static void UpdatePCMod(RE::PlayerCharacter* pc, float delta) {
+        // do my stuff
+        // call original function
+        UpdatePC(pc, delta);
+    }
+    static inline REL::Relocation<decltype(UpdatePCMod)> UpdatePC;
+};*/
 /**
  * This if the main callback for initializing your SKSE plugin, called just before Skyrim runs its main function.
  *
@@ -107,13 +139,14 @@ SKSEPluginLoad(const LoadInterface* skse) {
     auto* plugin = PluginDeclaration::GetSingleton();
     auto version = plugin->GetVersion();
     log::info("{} {} is loading...", plugin->GetName(), version);
-    //gossip::Gossip::getSingleton();
+    gossip::Gossip::getSingleton();
 
     Init(skse);
     InitializeMessaging();
     InitializeSerialization();
     InitializePapyrus();
-
+    gossip::UpdateHook::GetSingleton()->Setup();
+    //DumpSpecificVersion();
     log::info("{} has finished loading.", plugin->GetName());
     return true;
 }

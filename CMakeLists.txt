@@ -5,8 +5,8 @@ message("Using toolchain file ${CMAKE_TOOLCHAIN_FILE}.")
 ## Define project
 ########################################################################################################################
 project(
-        GossipEvents
-        VERSION 1.0.0
+        Gossip
+        VERSION 2.0.0
         DESCRIPTION "SKSE plugin for Gossip"
         LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
@@ -27,6 +27,7 @@ set(headers
         include/FameAlias.h
         include/FameOrigin.h
         include/Papyrus.h
+        include/Hooks.h
         include/serializationUtil.h)
 
 set(sources
@@ -38,6 +39,7 @@ set(sources
         src/FameOrigin.cpp 
         src/Papyrus.cpp 
         src/serializationUtil.cpp
+        src/Hooks.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 
 source_group(
