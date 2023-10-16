@@ -145,7 +145,7 @@ SKSEPluginLoad(const LoadInterface* skse) {
     InitializeMessaging();
     InitializeSerialization();
     InitializePapyrus();
-    gossip::UpdateHook::GetSingleton()->Setup();
+    //gossip::UpdateHook::GetSingleton()->Setup();
     //DumpSpecificVersion();
     log::info("{} has finished loading.", plugin->GetName());
     return true;

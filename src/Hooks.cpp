@@ -5,11 +5,11 @@ SINGLETONBODY(gossip::UpdateHook)
 void gossip::UpdateHook::Setup() {
     if (!_hooked) {
         _hooked = true;
-        REL::Relocation<std::uintptr_t> vtbl{RE::PlayerCharacter::VTABLE[0]};
+        //REL::Relocation<std::uintptr_t> vtbl{RE::PlayerCharacter::VTABLE[0]};
        // Update_old = vtbl.write_vfunc(0x0AD, Update);
-        auto& trampoline = SKSE::GetTrampoline();
-        trampoline.create(64);
-        onFrame_old = trampoline.write_call<5>(REL::RelocationID(NULL, 36544).address() + 0x160, reinterpret_cast<std::uintptr_t>(UpdateFrame));
+        //auto& trampoline = SKSE::GetTrampoline();
+        //trampoline.create(64);
+        //onFrame_old = trampoline.write_call<5>(REL::RelocationID(NULL, 36544).address() + 0x160, reinterpret_cast<std::uintptr_t>(UpdateFrame));
         //onFrame_old =
         //    trampoline.write_call<5>(0x005e4dd0 + REL::Module::get().base(),
         //                                       reinterpret_cast<std::uintptr_t>(UpdateFrame));

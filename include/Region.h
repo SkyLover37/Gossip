@@ -1,28 +1,38 @@
 #pragma once
-#include <Fame.h>
 
+#include <Scandal.h>
 namespace gossip {
-    struct region {
-        valueData interest;
-        RE::TESForm* form;
-        typedef std::map<valueType, valueData> fameGroup;
-        std::map<RE::TESGlobal*, fameGroup> fame;
-        region(){};
-        region(SKSE::SerializationInterface* evt) {
-            interest = valueData(evt);
-            form = readForm(evt);
-            std::size_t size;
-            evt->ReadRecordData(size);
-            for (int i = 0; i < size; i++) {
-                RE::TESGlobal* glob = readForm(evt)->As<RE::TESGlobal>();
-                size_t size = getSize(evt);
-                for (int i = 0; i < size; ++i) {
-                    valueData data(evt);
-                    fame[glob][data.type] = data;
-                }
+
+    class fame : public valueData<short> {
+    public:   
+        typedef valueData<short> super;
+
+        //Set as class as I plan to add more
+        class : public valueData<long long> {
+        public:
+            typedef valueData<long long> super;
+            void load(SKSE::SerializationInterface* evt) { super(evt);
             }
-        }
-        void save(SKSE::SerializationInterface* evt);
-        valueData* getInterest();
+        } local;
+        
+        fameInfo* info;
+
+    
+        fame(fameInfo* tmpInfo) : info(tmpInfo){};
+        fame(SKSE::SerializationInterface* evt);
     };
+
+    using fameMap = std::map<fameInfo*, fame>;
+    using interest = valueData<int>;
+    class region : public interest , public fameMap {
+    public:
+        typedef valueData<int> super;
+        RE::BGSLocation* tLoc;
+
+    
+        region(){};
+        region(SKSE::SerializationInterface* evt, infoMap& info);
+        void save(SKSE::SerializationInterface* evt);
+    };
+    using regionMap = std::map<RE::BGSLocation*, region>;
 }  // namespace gossip

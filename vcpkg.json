@@ -1,20 +1,22 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
-  "name": "gossip-events",
-  "version-string": "1.0.0",
+  "name": "gossip",
+  "version-string": "2.0.0",
   "port-version": 0,
   "description": "Plugin for Gossip Events",
-  "homepage": "https://www.skyrimng.com",
+  "homepage": "",
   "license": "Apache-2.0",
   "features": {
     "plugin": {
       "description": "Build the SKSE plugin.",
       "dependencies": [
-        "commonlibsse-ng"
+        "commonlibsse-ng",
+        "type-safe"
       ]
     }
   },
   "default-features": [
     "plugin"
-  ]
+  ],
+  "builtin-baseline": "51475feaccb720ab40e5a0e3f8da70a4510defc0"
 }

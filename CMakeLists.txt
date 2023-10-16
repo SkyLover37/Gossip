@@ -23,9 +23,10 @@ configure_file(
 set(headers
         include/Scandal.h
         include/Region.h 
-        include/Fame.h
+        include/valueData.h
         include/FameAlias.h
         include/FameOrigin.h
+        include/Gossip.h
         include/Papyrus.h
         include/Hooks.h
         include/serializationUtil.h)
@@ -34,12 +35,13 @@ set(sources
         src/Main.cpp
         src/Scandal.cpp
         src/Region.cpp 
-        src/Fame.cpp 
+        src/valueData.cpp 
         src/FameAlias.cpp 
         src/FameOrigin.cpp 
         src/Papyrus.cpp 
         src/serializationUtil.cpp
         src/Hooks.cpp
+        src/Gossip.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 
 source_group(
@@ -53,7 +55,7 @@ source_group(
 ### Build options
 #########################################################################################################################
 message("Options:")
-
+message("Directories: ${CMAKE_CURRENT_BINARY_DIR}")
 ########################################################################################################################
 ## Configure target DLL
 ########################################################################################################################
@@ -61,7 +63,7 @@ find_package(CommonLibSSE CONFIG REQUIRED)
 
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${headers} ${sources})
 add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
-
+target_link_libraries(${PROJECT_NAME} PUBLIC type_safe)
 target_include_directories(${PROJECT_NAME}
         PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>

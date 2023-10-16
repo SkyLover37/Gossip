@@ -12,7 +12,8 @@ namespace gossip {
         evt->ReadRecordData(name.data(), static_cast<std::uint32_t>(strings));
         return name;
     }
-    RE::TESForm* readForm(SKSE::SerializationInterface* evt) {
+    template <class T>
+    bool readForm(SKSE::SerializationInterface* evt, T* req) {
         RE::FormID oldForm;
         RE::FormID newForm = 0;
         evt->ReadRecordData(oldForm);
@@ -22,10 +23,11 @@ namespace gossip {
         RE::TESForm* aForm = RE::TESForm::LookupByID(newForm);
         if (!aForm) {
             logger::error("Failed to retrieve a form {:x},{:x}", oldForm, newForm);
-            return nullptr;
+            return false;
         }
-        logger::info("Retrieved form {} with FormID: {:x}", aForm->GetFormEditorID(), newForm);
-        return aForm;
+        req = aForm->As<T>();
+        logger::info("Retrieved form {} with FormID: {:x}", req->GetFormEditorID(), newForm);
+        return true;
     };
     size_t getSize(SKSE::SerializationInterface* evt) {
         size_t size;

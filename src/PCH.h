@@ -95,6 +95,10 @@
 #include <vector>
 #include <version>
 
+#include <type_safe/constrained_type.hpp>
+#include <type_safe/bounded_type.hpp>
+#include <type_safe/integer.hpp>
+
 #include <RE/Skyrim.h>
 #include <SKSE/SKSE.h>
 #include <REL/Relocation.h>
@@ -112,6 +116,13 @@
 // Compatible declarations with other sample projects.
 #define DLLEXPORT __declspec(dllexport)
 
+namespace ts = type_safe;
+using raw = ts::integer<long long>;
+template <typename T, typename Constraint>
+using clamped = ts::constrained_type<T, Constraint>;//ts::clamped_type<T>;
+using regionLimit = ts::constraints::closed_interval<short>;
+template <typename T>
+using valueLimit = ts::constraints::closed_interval<T>;
 using namespace std::literals;
 using namespace REL::literals;
 
