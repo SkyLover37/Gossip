@@ -95,6 +95,10 @@
 #include <vector>
 #include <version>
 
+#include <type_safe/constrained_type.hpp>
+#include <type_safe/bounded_type.hpp>
+#include <type_safe/integer.hpp>
+
 #include <RE/Skyrim.h>
 #include <SKSE/SKSE.h>
 #include <REL/Relocation.h>
@@ -111,6 +115,8 @@
 
 // Compatible declarations with other sample projects.
 #define DLLEXPORT __declspec(dllexport)
+
+namespace ts = type_safe;
 
 using namespace std::literals;
 using namespace REL::literals;

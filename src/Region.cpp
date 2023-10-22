@@ -1,16 +1,25 @@
 #include <Region.h>
 namespace gossip {
-    void region::save(SKSE::SerializationInterface* evt) {
-        interest.save(evt);
-        evt->WriteRecordData(form->formID);
-        evt->WriteRecordData(fame.size());
-        for (auto& fame : fame) {
-            evt->WriteRecordData(fame.first->formID);
-            evt->WriteRecordData(fame.second.size());
-            for (auto& grup : fame.second) {
-                grup.second.save(evt);
-            }
+    region::region(SKSE::SerializationInterface* evt) : interest(evt) {
+        readForm(evt, tLoc);
+        std::size_t size;
+        evt->ReadRecordData(size);
+        
+        for (int i = 0; i < size; i++) {
+            fameData tmpFameObj = fameData(evt);
+            if (!tmpFameObj.info) continue;
+            static_cast<fameMap>(*this)[tmpFameObj.info] = tmpFameObj;
         }
     }
-    valueData* region::getInterest() { return &interest; }
+    void region::operator()(SKSE::SerializationInterface* evt) {
+        interest(evt);
+        evt->WriteRecordData(tLoc->formID);
+        evt->WriteRecordData(size());
+        for (auto& fame : *this) {
+            evt->WriteRecordData(fame.first->getGlobal()->GetFormID());
+            fame.second(evt);
+            fame.second.localBound(evt);
+            
+        }
+    }
 }  // namespace gossip

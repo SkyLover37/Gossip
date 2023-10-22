@@ -1,52 +1,44 @@
 #pragma once
+#include <valueData.h>
 #include <serializationUtil.h>
 namespace gossip {
-    struct fameInfo {
-        int max = 100;
-        int min = 0;
+    namespace fame {
+        enum limit_type { local = 'LOCL', regional = 'REGL' };
+    }
+    class fameInfo : bound<short, fame::limit_type> {
+        
+        
         std::vector<std::string> tags;
         std::string name = "";
         RE::TESGlobal* fameGlobal = nullptr;
-        fameInfo(){};
+        
+
+    public:
+        using limit = bound<short, fame::limit_type>;
         template <typename T>
-        fameInfo(SKSE::SerializationInterface* evt, T* glob) {
-            std::string name;
-            std::vector<std::string> tags;
-            if (glob) {
-                fameGlobal = glob->As<RE::TESGlobal>();
-            }
-            evt->ReadRecordData(max);
-
-            evt->ReadRecordData(min);
-
-            std::size_t size;
-            evt->ReadRecordData(size);
-            for (int i = 0; i < size; ++i) {
-                tags.push_back(readString(evt));
-            }
-            name = readString(evt);
-        }
-        fameInfo(RE::TESGlobal* newForm, std::string name, int min, int max, std::vector<std::string> tags)
-            : fameGlobal(newForm), name(name), min(min), max(max), tags(tags) {
-            logger::info("New fame {} ", name);
-        }
-
-        void save(SKSE::SerializationInterface* evt) {
-            evt->WriteRecordData(fameGlobal->GetFormID());
-            evt->WriteRecordData(max);
-            evt->WriteRecordData(min);
-            std::size_t size = tags.size();
-            evt->WriteRecordData(size);
-            for (int i = 0; i < tags.size(); i++) {
-                writeString(evt, tags[i]);
-            }
-            size = name.length() + 1;
-            evt->WriteRecordData(size);
-            evt->WriteRecordData(name.data(), static_cast<std::uint32_t>(size));
-        }
-        void setValueMin(int amt);
-        void setValueMax(int amt);
-        int getValueMin();
-        int getValueMax();
+        fameInfo(SKSE::SerializationInterface* evt, T* glob = nullptr);
+        fameInfo(RE::TESGlobal* newForm, std::string name, int min, int max, std::vector<std::string> tags);
+        void operator()(SKSE::SerializationInterface* evt);
+        void operator()(short min, short max) { limit::operator()(min, max);
+        };
+        limit* getLimit() { return &static_cast<limit>(*this); };
+        RE::TESGlobal* getGlobal() { return fameGlobal;}
     };
+    using infoMap = std::map<RE::TESGlobal*, fameInfo>;
+    infoMap* infoRelay = nullptr;
+
+    
+    class fameData : valueData<short, fame::limit_type>  {
+    public:
+        using value = valueData<short, fame::limit_type>;
+        using limit = bound<short, fame::limit_type>;
+        limit localBound;
+        fameInfo* info;
+        fameData(fameInfo* tmpInfo) : info(tmpInfo), localBound(fame::limit_type::local, 0, 100), value(0, *info->getLimit()) {};
+        fameData(SKSE::SerializationInterface* evt);
+        void operator()(SKSE::SerializationInterface* evt);
+    };
+    
+    using fameMap = std::map<fameInfo*, fameData>;
+
 }  // namespace gossip

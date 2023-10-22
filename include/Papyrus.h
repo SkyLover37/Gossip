@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Scandal.h>
+#include <Gossip.h>
 
 namespace gossip {
     bool getActive(RE::StaticFunctionTag*);

@@ -1,28 +1,19 @@
 #pragma once
-#include <Fame.h>
 
+#include <Scandal.h>
 namespace gossip {
-    struct region {
-        valueData interest;
-        RE::TESForm* form;
-        typedef std::map<valueType, valueData> fameGroup;
-        std::map<RE::TESGlobal*, fameGroup> fame;
-        region(){};
-        region(SKSE::SerializationInterface* evt) {
-            interest = valueData(evt);
-            form = readForm(evt);
-            std::size_t size;
-            evt->ReadRecordData(size);
-            for (int i = 0; i < size; i++) {
-                RE::TESGlobal* glob = readForm(evt)->As<RE::TESGlobal>();
-                size_t size = getSize(evt);
-                for (int i = 0; i < size; ++i) {
-                    valueData data(evt);
-                    fame[glob][data.type] = data;
-                }
-            }
+
+
+    class region : valueData<int>, fameMap {
+    public:
+        typedef fameMap fameMap;
+        typedef valueData<int> interest;
+        RE::BGSLocation* tLoc;
+
+        region(SKSE::SerializationInterface* evt);
+        void operator()(SKSE::SerializationInterface* evt);
+        fameData* operator[](fameInfo* info) { return (*this)[info];
         }
-        void save(SKSE::SerializationInterface* evt);
-        valueData* getInterest();
     };
+    using regionMap = std::map<RE::BGSLocation*, region>;
 }  // namespace gossip
