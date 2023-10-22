@@ -1,5 +1,13 @@
 #include <Gossip.h>
 namespace gossip {
+    Gossip::Gossip() : profile {
+    
+        infoRelay = &fame;
+    
+    }
+    RE::TESFaction *Gossip::currentFaction() {
+        return (profile.activeAlias->faction);
+    }
     RE::BGSLocation *Gossip::checkLocation(RE::BGSLocation *checkLoc, bool checkParent) {
         RE::BGSLocation *newLoc;
         if (std::find(trackedLocations.begin(), trackedLocations.end(), checkLoc) != trackedLocations.end()) {
@@ -11,22 +19,8 @@ namespace gossip {
         return nullptr;
     }
 
-    valueData *Gossip::getInterest() { return currentRegion->getInterest(); }
-
-    valueData *Gossip::getInterest(RE::BGSLocation *akLoc, RE::TESFaction *alias) {
-        return Alias[alias].known[akLoc].getInterest();
-    }
-
-    valueData *Gossip::getInterest(RE::BGSLocation *akLoc) { return currentFameAlias->known[akLoc].getInterest(); }
-
-    valueData *Gossip::getValueObj(RE::TESGlobal *global) {
-        return &currentRegion->fame[global][valueType];
-    }
-    valueData *Gossip::getValueObj(RE::BGSLocation *loc, RE::TESGlobal *global) {
-        return &currentFameAlias->known[loc].fame[global][valueType];
-    }
-    valueData *Gossip::getValueObj(RE::TESFaction *fac, RE::BGSLocation *Loc, RE::TESGlobal *global) {
-        return &Alias[fac].known[Loc].fame[global][valueType];
+    fameData *Gossip::getFameObj(RE::TESFaction* faction, RE::BGSLocation* loc, RE::TESGlobal *global) {
+        return profile[faction][checkLocation(loc)][&fame[global]];
     }
     bool Gossip::setState(bool active) {
         o_gossip.active = active;
@@ -42,23 +36,23 @@ namespace gossip {
             evt->WriteRecordData(size);
             logger::info("{}", size);
             for (auto &famein : Gossip::getSingleton()->fame) {
-                famein.second.save(evt);
+                famein.second(evt);
             }
         }
-        if (!evt->OpenRecord('ALAS', 1)) {
+        if (!evt->OpenRecord('LOCN', 1)) {
+        
         } else {
-            evt->WriteRecordData(gossip->Alias.size());
-            for (auto &alias : gossip->Alias) {
-                evt->WriteRecordData(alias.first->formID);
-                alias.second.save(evt);
-            }
+            evt->WriteRecordData(o_gossip.trackedLocations.size());
+            for (auto &entry : o_gossip.trackedLocations) {
+                evt->WriteRecordData(entry->GetFormID());
+            };
         }
         if (!evt->OpenRecord('PROF', 1)) {
         } else {
-            evt->WriteRecordData(gossip->npcProfile.size());
-            for (auto &profile : gossip->npcProfile) {
-                profile.second.save(evt);
-            }
+            //evt->WriteRecordData(gossip->npcProfile.size());
+            //for (auto &profile : gossip->npcProfile) {
+            o_gossip.profile(evt);
+            //}
         }
         if (!evt->OpenRecord('TLRC', 1)) {
         } else {
@@ -86,35 +80,18 @@ namespace gossip {
                     evt->ReadRecordData(size);
                     logger::info("fame count {}", size);
                     for (int i = 0; i < size; ++i) {
-                        RE::TESForm *tempf = readForm(evt);
+                        RE::TESForm *tempf;
+                        readForm(evt, tempf);
                         auto info = fameInfo(evt, tempf);
                         if (!tempf) continue;
 
-                        log::debug("Retrieved fame {}", info.fameGlobal->GetName());
-                        o_gossip.fame[info.fameGlobal] = info;
-                    }
-                    break;
-                }
-                case 'ALAS': {
-                    std::size_t size;
-                    evt->ReadRecordData(size);
-                    for (int i = 0; i < size; i++) {
-                        auto form = readForm(evt);
-                        auto alias = fameAlias(evt);
-                        if (!form) continue;
-                        RE::TESFaction *fac = form->As<RE::TESFaction>();
-                        o_gossip.Alias[fac] = alias;
+                        log::debug("Retrieved fame {}", info.getGlobal()->GetName());
+                        o_gossip.fame[info.getGlobal()] = info;
                     }
                     break;
                 }
                 case 'PROF': {
-                    std::size_t size;
-                    evt->ReadRecordData(size);
-                    for (int i = 0; i < size; i++) {
-                        fameProfile akProfile(evt);
-                        if (!akProfile.akActor) continue;
-                        o_gossip.npcProfile[akProfile.akActor] = akProfile;
-                    }
+                    o_gossip.profile(evt);
                     break;
                 }
                 case 'TLRC': {
@@ -122,11 +99,10 @@ namespace gossip {
                     evt->ReadRecordData(size);
                     for (int i = 0; i < size; i++) {
                         int tolerance;
-                        auto form = readForm(evt);
-                        valueData tol(evt);
-                        if (!form) continue;
-                        RE::BGSLocation *loc = form->As<RE::BGSLocation>();
-
+                        RE::BGSLocation *loc;
+                        readForm(evt, loc);
+                        valueData<long long> tol(evt);
+                        if (!loc) continue;
                         o_gossip.regionTolerance[loc] = tol;
                     }
                     break;

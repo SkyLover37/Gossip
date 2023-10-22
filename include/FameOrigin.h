@@ -2,30 +2,43 @@
 #include <valueData.h>
 #include <serializationUtil.h>
 namespace gossip {
-    
-    class fameInfo {
-        regionLimit _limit{0, 100};
+    namespace fame {
+        enum limit_type { local = 'LOCL', regional = 'REGL' };
+    }
+    class fameInfo : bound<short, fame::limit_type> {
+        
+        
         std::vector<std::string> tags;
         std::string name = "";
         RE::TESGlobal* fameGlobal = nullptr;
-        fameInfo(){};
+        
+
+    public:
+        using limit = bound<short, fame::limit_type>;
         template <typename T>
         fameInfo(SKSE::SerializationInterface* evt, T* glob = nullptr);
         fameInfo(RE::TESGlobal* newForm, std::string name, int min, int max, std::vector<std::string> tags);
-
-    public:
-        void save(SKSE::SerializationInterface* evt);
-        void setLimit(short min, short max);
-        regionLimit getLimit();
+        void operator()(SKSE::SerializationInterface* evt);
+        void operator()(short min, short max) { limit::operator()(min, max);
+        };
+        limit* getLimit() { return &static_cast<limit>(*this); };
         RE::TESGlobal* getGlobal() { return fameGlobal;}
     };
-    class fameData {
-        fameInfo* info;
-        valueData<short> data;
-
-        public:
-
-    };
     using infoMap = std::map<RE::TESGlobal*, fameInfo>;
+    infoMap* infoRelay = nullptr;
+
+    
+    class fameData : valueData<short, fame::limit_type>  {
+    public:
+        using value = valueData<short, fame::limit_type>;
+        using limit = bound<short, fame::limit_type>;
+        limit localBound;
+        fameInfo* info;
+        fameData(fameInfo* tmpInfo) : info(tmpInfo), localBound(fame::limit_type::local, 0, 100), value(0, *info->getLimit()) {};
+        fameData(SKSE::SerializationInterface* evt);
+        void operator()(SKSE::SerializationInterface* evt);
+    };
+    
     using fameMap = std::map<fameInfo*, fameData>;
+
 }  // namespace gossip

@@ -3,40 +3,29 @@
 
 namespace gossip {
     
-    struct fameAlias {
-        
+    class fameAlias : public regionMap {
+    public:
         std::string name = "";
-        RE::TESForm* form = nullptr;
-        
-        regionMap known;
-        fameAlias(){};
-        fameAlias(std::string name, RE::TESForm* form) : name(name), form(form) {}
-        fameAlias(SKSE::SerializationInterface* evt) {
-            name = readString(evt);
-            readForm(evt, form);
-            
-            //std::string aliasName = readString(evt);
-            std::size_t size;
-            evt->ReadRecordData(size);
-            for (int i = 0; i < size; i++) {
-                RE::BGSLocation* loc;
-                readForm(evt, loc);
-                known[loc] = region(evt);
-            }
-        };
-        
-        void save(SKSE::SerializationInterface* evt);
-        region* getRegion(RE::BGSLocation* loc);
-        valueData* getValueObject(valueType val, RE::BGSLocation* loc, RE::TESGlobal* global);
+        RE::TESFaction* faction;
+ 
+        fameAlias(std::string name, RE::TESFaction* faction) : name(name), faction(faction) {}
+        fameAlias(SKSE::SerializationInterface* evt);
+        void operator()(SKSE::SerializationInterface* evt);
+        region& operator[](RE::BGSLocation* loc) { return static_cast<regionMap>(*this)[loc]; }
     };
-    struct fameProfile {
-        valueData recognition;
+    using aliasMap = std::map<RE::TESFaction*, fameAlias>;
+
+
+    using recognition = valueData<long long>;
+    class fameProfile : public recognition, public aliasMap {
+    public:
         RE::TESObjectREFR* akActor;
-        std::vector<fameAlias*> activeAlias;
-        std::map<fameAlias*, valueData> interest;
-        fameProfile(){};
+        fameAlias* activeAlias;
+
         fameProfile(RE::TESObjectREFR* akActor) : akActor(akActor) {}
         fameProfile(SKSE::SerializationInterface* evt);
-        void save(SKSE::SerializationInterface* evt);
+        fameAlias& operator[](RE::TESFaction* fac) { return static_cast<aliasMap>(*this)[fac];
+        }
+        void operator()(SKSE::SerializationInterface* evt);
     };
 }  // namespace gossip

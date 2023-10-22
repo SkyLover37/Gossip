@@ -1,6 +1,7 @@
 
 #include <FameAlias.h>
 namespace gossip {
+   
     class Gossip {
     public:
         
@@ -8,21 +9,21 @@ namespace gossip {
         bool active = false;
         std::vector<RE::BGSLocation*> trackedLocations;
         infoMap fame;
-        std::map<RE::TESFaction*, fameAlias> Alias{};
         std::map<RE::BGSLocation*, valueData<long long>> regionTolerance{};
-        std::map<RE::TESObjectREFR*, fameProfile> profiles;
-
+        //std::map<RE::TESObjectREFR*, fameProfile> profiles;
+        fameProfile profile;
         static Gossip* getSingleton() {
             // static Gossip* container;
             // if (!container) container = new Gossip;
             return &o_gossip;
         }
-
+        Gossip();
+        RE::TESFaction* currentFaction();
+        RE::BGSLocation* currentLocation();
         RE::BGSLocation* checkLocation(RE::BGSLocation* checkLoc, bool CheckLocation = true);
         
-        valueData* getValueObj(RE::TESGlobal* global);
-        valueData* getValueObj(RE::BGSLocation* loc, RE::TESGlobal* global);
-        valueData* getValueObj(RE::TESFaction* fac, RE::BGSLocation* Loc, RE::TESGlobal* global);
+        
+        fameData* getFameObj(RE::TESFaction* faction, RE::BGSLocation* loc, RE::TESGlobal* global);
 
         bool setState(bool active);
 
@@ -30,7 +31,6 @@ namespace gossip {
         static void onGameLoad(SKSE::SerializationInterface* evt);
         static void onRevert(SKSE::SerializationInterface* evt);
 
-    private:
     } static o_gossip;
-
+    
 }

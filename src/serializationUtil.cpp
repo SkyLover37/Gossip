@@ -20,12 +20,12 @@ namespace gossip {
         evt->ResolveFormID(oldForm, newForm);
         //auto handler = RE::TESDataHandler::GetSingleton();
         //auto aForm = handler->LookupForm<RE::TESGlobal>(newForm, "Gossip.esp");
-        RE::TESForm* aForm = RE::TESForm::LookupByID(newForm);
+        T*  = RE::TESForm::LookupByID<T>(newForm);
         if (!aForm) {
             logger::error("Failed to retrieve a form {:x},{:x}", oldForm, newForm);
             return false;
         }
-        req = aForm->As<T>();
+        
         logger::info("Retrieved form {} with FormID: {:x}", req->GetFormEditorID(), newForm);
         return true;
     };
