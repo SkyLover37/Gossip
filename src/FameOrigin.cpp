@@ -22,12 +22,15 @@ namespace gossip {
 
 
 
-    fameData::fameData(SKSE::SerializationInterface* evt) : localBound(evt), _value(evt){
+    fameData::fameData(SKSE::SerializationInterface* evt) : localBound(evt), _gossip(evt), value(evt){
         RE::TESGlobal* glob = nullptr;
         readForm(evt, glob);
-        if (!glob) return;
-
-        fameInfo* tmpInfo = &(*infoRelay)[glob];
+        if (!glob) 
+        {
+            return;
+        }
+        auto entry = infoRelay->find(glob);
+        info = entry != infoRelay->end() ? &entry->second : nullptr;
     }
     void fameData::operator()(SKSE::SerializationInterface* evt){
         

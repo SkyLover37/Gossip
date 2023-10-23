@@ -1,7 +1,7 @@
 #include "FameAlias.h"
 //#include <Scandal.h>
 namespace gossip {
-    fameProfile::fameProfile(SKSE::SerializationInterface* evt) {
+    fameProfile::fameProfile(SKSE::SerializationInterface* evt) : recognition(0){
         readForm(evt, akActor);
     }
     void fameProfile::operator()(SKSE::SerializationInterface* evt) {
@@ -18,7 +18,8 @@ namespace gossip {
         for (int i = 0; i < size; i++) {
             RE::BGSLocation* loc;
             readForm(evt, loc);
-            static_cast<regionMap>(*this)[loc] = region(evt);
+            if (!loc) continue;
+            regionMap.insert(std::make_pair(loc, region(evt)));
         }
     }
     void fameAlias::operator()(SKSE::SerializationInterface* evt) {
@@ -26,8 +27,8 @@ namespace gossip {
         writeString(evt, name);
         evt->WriteRecordData(faction->formID);
             
-        for (auto& knownEntry : *this) {
-            evt->WriteRecordData(this->size());
+        for (auto& knownEntry : regionMap) {
+            evt->WriteRecordData(regionMap.size());
             evt->WriteRecordData(knownEntry.first->formID);
             knownEntry.second(evt);
         }

@@ -9,7 +9,7 @@ namespace gossip {
         bool active = false;
         std::vector<RE::BGSLocation*> trackedLocations;
         infoMap fame;
-        std::map<RE::BGSLocation*, valueData<long long>> regionTolerance{};
+        std::map<RE::BGSLocation*, valueData<long long, default_limit_tag>> regionTolerance{};
         //std::map<RE::TESObjectREFR*, fameProfile> profiles;
         fameProfile profile;
         static Gossip* getSingleton() {

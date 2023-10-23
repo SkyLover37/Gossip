@@ -5,7 +5,8 @@ using namespace SKSE;
 using namespace SKSE::stl;
 
 namespace gossip {
-    enum default_tag { defaulttag };
+    struct default_limit_tag {};
+    
     template <typename T, typename B>
     struct bound {
         T _min;
@@ -32,7 +33,7 @@ namespace gossip {
         T clamp(T val) { return min(max(val)); }
     };
 
-    template <typename T, typename B = default_tag>
+    template <typename T, typename B>
     class valueData : public bound<T, B> {
         typedef bound<T, B> limit;
 
@@ -41,8 +42,10 @@ namespace gossip {
         T val;
 
     public:
-        valueData() : raw(0), val(0), limit(0, 100){};
-        valueData(B limitType) : raw(0), val(0), limit(0, 100){};
+        int imin = std::numeric_limits<T>::min();
+        int imax = std::numeric_limits<T>::max();
+        
+        valueData(B limitType) : raw(0), val(0), limit(imin, imax){};
         valueData(T val, limit _limit) : raw(0), val(0), limit(_limit){};
         valueData(B limitType, limit _limit) : raw(0), val(0), limit(_limit){};
         valueData(B limitType, T val, T min, T max) : raw(val), limit(val, min, max) {};
@@ -61,7 +64,7 @@ namespace gossip {
             val = limit::clamp(raw);
         };
         void operator=(limit data) { limit = data;};
-        void operator()(T min, T max){limit = new limit(min, max)};
+        void operator()(T min, T max) { limit = new limit(min, max); };
         operator T() const { return val; };
         T getRawValue() { return raw; };
         void operator()(SKSE::SerializationInterface* evt) {

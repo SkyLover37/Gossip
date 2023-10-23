@@ -6,7 +6,7 @@ namespace gossip {
     }
     class fameInfo : bound<short, fame::limit_type> {
         
-        
+        typedef bound<short, fame::limit_type> limit;
         std::vector<std::string> tags;
         std::string name = "";
         RE::TESGlobal* fameGlobal = nullptr;
@@ -15,7 +15,7 @@ namespace gossip {
     public:
         using limit = bound<short, fame::limit_type>;
         template <typename T>
-        fameInfo(SKSE::SerializationInterface* evt, T* glob = nullptr) {
+        fameInfo(SKSE::SerializationInterface* evt, T* glob = nullptr) : limit(evt) {
             if (glob) {
                 fameGlobal = glob->As<RE::TESGlobal>();
             }
@@ -32,23 +32,34 @@ namespace gossip {
         void operator()(SKSE::SerializationInterface* evt);
         void operator()(short min, short max) { limit::operator()(min, max);
         };
-        limit* getLimit() { return &static_cast<limit>(*this); };
+        limit* getLimit() { return static_cast<limit*>(this); };
         RE::TESGlobal* getGlobal() { return fameGlobal;}
     };
     using infoMap = std::map<RE::TESGlobal*, fameInfo>;
-    infoMap* infoRelay = nullptr;
+    extern infoMap* infoRelay;
 
     
     class fameData : valueData<short, fame::limit_type>  {
     public:
         typedef valueData<short, fame::limit_type> value;
-        using limit = bound<short, fame::limit_type>;
-        value _value;
+        typedef bound<short, fame::limit_type> limit;
+        valueData<long long, default_limit_tag> _gossip;
         limit localBound;
         fameInfo* info;
-        fameData(){};
-        fameData(fameInfo* tmpInfo) : info(tmpInfo), localBound(fame::limit_type::local, 0, 100), _value(0, *info->getLimit()) {};
+        fameData(fameInfo* tmpInfo) : info(tmpInfo), localBound(fame::limit_type::local, 0, 100), _gossip(0), value(0, *info->getLimit()) {};
         fameData(SKSE::SerializationInterface* evt);
+        void operator+=(fameData& data) { 
+            value::operator+=(data);
+            _gossip += data._gossip;
+        }
+        void operator-=(fameData& data) { 
+            value::operator+=(data);
+            _gossip -= data._gossip;
+        }
+        void operator=(fameData& data) { 
+            value::operator=(data);
+            _gossip = data._gossip;
+        }
         void operator()(SKSE::SerializationInterface* evt);
     };
     

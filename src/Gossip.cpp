@@ -1,6 +1,6 @@
 #include <Gossip.h>
 namespace gossip {
-    Gossip::Gossip() : profile {
+    Gossip::Gossip() : profile(RE::PlayerCharacter::GetSingleton()) {
     
         infoRelay = &fame;
     
@@ -20,7 +20,8 @@ namespace gossip {
     }
 
     fameData *Gossip::getFameObj(RE::TESFaction* faction, RE::BGSLocation* loc, RE::TESGlobal *global) {
-        return profile[faction][checkLocation(loc)][&fame[global]];
+        auto entry = fame.find(global);
+        return entry != fame.end() ? profile[faction][checkLocation(loc)].value()[&entry->second] : nullptr;
     }
     bool Gossip::setState(bool active) {
         o_gossip.active = active;
@@ -86,7 +87,7 @@ namespace gossip {
                         if (!tempf) continue;
 
                         log::debug("Retrieved fame {}", info.getGlobal()->GetName());
-                        o_gossip.fame[info.getGlobal()] = info;
+                        o_gossip.fame.insert(std::make_pair(info.getGlobal(), info));
                     }
                     break;
                 }
@@ -101,9 +102,9 @@ namespace gossip {
                         int tolerance;
                         RE::BGSLocation *loc;
                         readForm(evt, loc);
-                        valueData<long long> tol(evt);
+                        valueData<long long, default_limit_tag> tol(evt);
                         if (!loc) continue;
-                        o_gossip.regionTolerance[loc] = tol;
+                        o_gossip.regionTolerance.insert(std::make_pair(loc, tol));
                     }
                     break;
                 }
