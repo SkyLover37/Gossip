@@ -1,4 +1,3 @@
-#pragma once
 
 #include <Scandal.h>
 namespace gossip {

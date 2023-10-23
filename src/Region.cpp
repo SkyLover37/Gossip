@@ -1,6 +1,6 @@
 #include <Region.h>
 namespace gossip {
-    region::region(SKSE::SerializationInterface* evt) : interest(evt) {
+    region::region(SKSE::SerializationInterface* evt){
         readForm(evt, tLoc);
         std::size_t size;
         evt->ReadRecordData(size);
@@ -12,13 +12,13 @@ namespace gossip {
         }
     }
     void region::operator()(SKSE::SerializationInterface* evt) {
-        interest(evt);
+        //interest::operator()(evt);
         evt->WriteRecordData(tLoc->formID);
         evt->WriteRecordData(size());
         for (auto& fame : *this) {
             evt->WriteRecordData(fame.first->getGlobal()->GetFormID());
             fame.second(evt);
-            fame.second.localBound(evt);
+            //fame.second.localBound(evt);
             
         }
     }

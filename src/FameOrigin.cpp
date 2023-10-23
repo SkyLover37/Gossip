@@ -1,24 +1,6 @@
 #include "FameOrigin.h"
 namespace gossip {
-    
-    template <typename T>
-    fameInfo::fameInfo(SKSE::SerializationInterface* evt, T* glob) {
-        if (glob) {
-            fameGlobal = glob->As<RE::TESGlobal>();
-        }
-        evt->ReadRecordData(max);
-
-        evt->ReadRecordData(min);
-
-        std::size_t size;
-        
-        evt->ReadRecordData(size);
-        tags.reserve(size);
-        for (int i = 0; i < size; ++i) {
-            tags.push_back(readString(evt));
-        }
-        name = readString(evt);
-    }
+    infoMap* infoRelay = nullptr;
     fameInfo::fameInfo(RE::TESGlobal* newForm, std::string name, int min, int max, std::vector<std::string> tags)
         : fameGlobal(newForm), name(name), tags(tags), limit(fame::regional, min, max) {
         logger::info("New fame {} ", name);
@@ -40,7 +22,7 @@ namespace gossip {
 
 
 
-    fameData::fameData(SKSE::SerializationInterface* evt) : localBound(evt), value(evt){
+    fameData::fameData(SKSE::SerializationInterface* evt) : localBound(evt), _value(evt){
         RE::TESGlobal* glob = nullptr;
         readForm(evt, glob);
         if (!glob) return;

@@ -1,4 +1,3 @@
-#pragma once
 
 #include <FameOrigin.h>
 using namespace RE::BSScript;
