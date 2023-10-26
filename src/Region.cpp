@@ -1,6 +1,7 @@
 #include <Region.h>
 namespace gossip {
     region::region(SKSE::SerializationInterface* evt) : interest(evt){
+        
         readForm(evt, tLoc);
         std::size_t size;
         evt->ReadRecordData(size);
@@ -8,7 +9,7 @@ namespace gossip {
         for (int i = 0; i < size; i++) {
             fameData tmpFameObj = fameData(evt);
             if (!tmpFameObj.info) continue;
-            fameMap.insert(std::make_pair(tmpFameObj.info, tmpFameObj));
+            fameMap.insert({tmpFameObj.info, tmpFameObj});
         }
     }
     void region::operator()(SKSE::SerializationInterface* evt) {

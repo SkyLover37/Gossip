@@ -1,8 +1,8 @@
 #include "FameOrigin.h"
 namespace gossip {
     infoMap* infoRelay = nullptr;
-    fameInfo::fameInfo(RE::TESGlobal* newForm, std::string name, int min, int max, std::vector<std::string> tags)
-        : fameGlobal(newForm), name(name), tags(tags), limit(fame::regional, min, max) {
+    fameInfo::fameInfo(RE::TESGlobal* newForm, std::string name, std::uint16_t min, std::uint16_t max, std::vector<std::string> tags)
+        : fameGlobal(newForm), name(name), tags(tags), fameLimit(fameLimit::limit_type::regional, min, max) {
         logger::info("New fame {} ", name);
     }
 
@@ -22,17 +22,24 @@ namespace gossip {
 
 
 
-    fameData::fameData(SKSE::SerializationInterface* evt) : localBound(evt), _gossip(evt), value(evt){
+    fameData::fameData(SKSE::SerializationInterface* evt) : localBound(evt){
+        evt->ReadRecordData(raw);
+        evt->ReadRecordData(val);
+        evt->ReadRecordData(_gossip);
         RE::TESGlobal* glob = nullptr;
         readForm(evt, glob);
         if (!glob) 
         {
+            info = nullptr;
             return;
         }
         auto entry = infoRelay->find(glob);
         info = entry != infoRelay->end() ? &entry->second : nullptr;
     }
-    void fameData::operator()(SKSE::SerializationInterface* evt){
-        
+    void fameData::operator()(SKSE::SerializationInterface* evt) { 
+        evt->WriteRecordData(raw);
+        evt->WriteRecordData(val);
+        evt->WriteRecordData(_gossip);
+        evt->WriteRecordData(info->getGlobal()->GetFormID());
     };
 }  // namespace gossip

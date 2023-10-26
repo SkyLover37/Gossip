@@ -16,10 +16,9 @@ namespace gossip {
         std::size_t size;
         evt->ReadRecordData(size);
         for (int i = 0; i < size; i++) {
-            RE::BGSLocation* loc;
-            readForm(evt, loc);
-            if (!loc) continue;
-            regionMap.insert(std::make_pair(loc, region(evt)));
+            auto reg = region(evt);
+            if (!reg) continue;
+            regionMap.insert({reg.tLoc, reg});
         }
     }
     void fameAlias::operator()(SKSE::SerializationInterface* evt) {

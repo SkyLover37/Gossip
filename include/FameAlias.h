@@ -8,29 +8,42 @@ namespace gossip {
         std::string name = "";
         RE::TESFaction* faction;
         regionMap regionMap;
-        fameAlias(){};
         fameAlias(std::string name, RE::TESFaction* faction) : name(name), faction(faction) {}
         fameAlias(SKSE::SerializationInterface* evt);
         void operator()(SKSE::SerializationInterface* evt);
-        std::optional<region> operator[](RE::BGSLocation* loc) { 
+        region& operator[](RE::BGSLocation* loc) { 
             auto entry = regionMap.find(loc);
             bool found = entry != regionMap.end();
-            return found ? std::optional<region>(entry->second) : std::nullopt;
+            if (!found)
+                logger::error("Could not find region associated with {} {} {:x}", loc->GetName(),
+                              loc->GetFormEditorID(), loc->GetFormID());
+            return entry->second;
         }
     };
     using aliasMap = std::map<RE::TESFaction*, fameAlias>;
 
-
-    using recognition = valueData<long long, default_limit_tag>;
-    class fameProfile : recognition {
+    class fameProfile {
     public:
         RE::TESObjectREFR* akActor;
+        std::uint16_t recognition;
         fameAlias* activeAlias;
         aliasMap aliasMap;
         regionMap regionMap;
         fameProfile(RE::TESObjectREFR* akActor) : akActor(akActor), recognition(0) {}
         fameProfile(SKSE::SerializationInterface* evt);
-        fameAlias& operator[](RE::TESFaction* fac) { return aliasMap[fac];
+        fameAlias& operator[](RE::TESFaction* fac) { 
+            auto entry = aliasMap.find(fac);
+            if (entry == aliasMap.end())
+                logger::error("Could not find fameAlias associated with {} {} {:x}", fac->GetName(),
+                              fac->GetFormEditorID(), fac->GetFormID());
+            return entry->second;
+        }
+        region& operator[](RE::BGSLocation* loc) { 
+            auto entry = regionMap.find(loc);
+            if (entry == regionMap.end())
+                logger::error("Could not find fameProfile region associated with {} {} {:x}", loc->GetName(),
+                              loc->GetFormEditorID(), loc->GetFormID());
+            return entry->second;
         }
         void operator=(fameAlias* val) { activeAlias = val; }
         void operator()(SKSE::SerializationInterface* evt);

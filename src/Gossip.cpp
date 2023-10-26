@@ -5,8 +5,23 @@ namespace gossip {
         infoRelay = &fame;
     
     }
+    fameInfo &Gossip::operator[](RE::TESGlobal *global) {
+        auto entry = fame.find(global);
+        if (entry == fame.end())
+            logger::error("Could not find fame associated with {} {} {:x}", global->GetName(),
+                          global->GetFormEditorID(), global->GetFormID());
+        return entry->second;
+    }
+    region *Gossip::getRegionObj(RE::TESFaction * fac, RE::BGSLocation * loc) { 
+        if (fac)
+            return &profile[fac][loc];
+        else
+            return &profile[loc];
+    }
     RE::TESFaction *Gossip::currentFaction() {
-        return (profile.activeAlias->faction);
+        return (profile.activeAlias->faction); }
+    RE::BGSLocation *Gossip::currentLocation() {
+        return checkLocation(RE::PlayerCharacter::GetSingleton()->GetCurrentLocation());
     }
     RE::BGSLocation *Gossip::checkLocation(RE::BGSLocation *checkLoc, bool checkParent) {
         RE::BGSLocation *newLoc;
@@ -19,9 +34,13 @@ namespace gossip {
         return nullptr;
     }
 
-    fameData *Gossip::getFameObj(RE::TESFaction* faction, RE::BGSLocation* loc, RE::TESGlobal *global) {
+    fameData *Gossip::getFameObj(RE::TESGlobal *global, RE::TESFaction * faction, RE::BGSLocation * loc) {
         auto entry = fame.find(global);
-        return entry != fame.end() ? profile[faction][checkLocation(loc)].value()[&entry->second] : nullptr;
+        return entry != fame.end() ? profile[faction][checkLocation(loc)][&entry->second] : nullptr;
+    }
+    fameAlias *Gossip::getAliasObj(RE::TESFaction * fac) { 
+         auto entry = profile.aliasMap.find(fac);
+        return &entry->second;
     }
     bool Gossip::setState(bool active) {
         o_gossip.active = active;
@@ -29,14 +48,14 @@ namespace gossip {
     }
     void Gossip::onGameSaved(SKSE::SerializationInterface *evt) {
         logger::info("Game save");
-        Gossip *gossip = Gossip::getSingleton();
+        Gossip&gossip = Gossip::getSingleton();
 
-        std::size_t size = gossip->fame.size();
+        std::size_t size = gossip.fame.size();
         if (!evt->OpenRecord('FAME', 1)) {
         } else {
             evt->WriteRecordData(size);
             logger::info("{}", size);
-            for (auto &famein : Gossip::getSingleton()->fame) {
+            for (auto &famein : Gossip::getSingleton().fame) {
                 famein.second(evt);
             }
         }
@@ -57,10 +76,9 @@ namespace gossip {
         }
         if (!evt->OpenRecord('TLRC', 1)) {
         } else {
-            evt->WriteRecordData(gossip->regionTolerance.size());
-            for (auto &tolerance : gossip->regionTolerance) {
+            evt->WriteRecordData(gossip.regionTolerance.size());
+            for (auto &tolerance : gossip.regionTolerance) {
                 evt->WriteRecordData(tolerance.first->formID);
-                evt->WriteRecordData(tolerance.second);
             }
         }
     }
@@ -81,13 +99,21 @@ namespace gossip {
                     evt->ReadRecordData(size);
                     logger::info("fame count {}", size);
                     for (int i = 0; i < size; ++i) {
-                        RE::TESForm *tempf;
-                        readForm(evt, tempf);
-                        auto info = fameInfo(evt, tempf);
-                        if (!tempf) continue;
-
+                        auto info = fameInfo(evt);
+                        if (!info) continue;
                         log::debug("Retrieved fame {}", info.getGlobal()->GetName());
-                        o_gossip.fame.insert(std::make_pair(info.getGlobal(), info));
+                        o_gossip.fame.insert({info.getGlobal(), info});
+                    }
+                    break;
+                }
+                case 'LOCN': {
+                    std::size_t size = getSize(evt);
+                    o_gossip.trackedLocations.reserve(size);
+                    for (int i = 0; i < size; i++) {
+                        RE::BGSLocation *loc;
+                        readForm(evt, loc);
+                        if (!loc) continue;
+                        o_gossip.trackedLocations.push_back(loc);
                     }
                     break;
                 }
@@ -102,9 +128,10 @@ namespace gossip {
                         int tolerance;
                         RE::BGSLocation *loc;
                         readForm(evt, loc);
-                        valueData<long long, default_limit_tag> tol(evt);
+                        int tol;
+                        evt->ReadRecordData(tol);
                         if (!loc) continue;
-                        o_gossip.regionTolerance.insert(std::make_pair(loc, tol));
+                        o_gossip.regionTolerance.insert({loc, tol});
                     }
                     break;
                 }
