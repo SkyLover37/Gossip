@@ -1,7 +1,7 @@
 #include "FameAlias.h"
 //#include <Scandal.h>
 namespace gossip {
-    fameProfile::fameProfile(SKSE::SerializationInterface* evt) : recognition(0){
+    fameProfile::fameProfile(SKSE::SerializationInterface* evt){
         readForm(evt, akActor);
     }
     void fameProfile::operator()(SKSE::SerializationInterface* evt) {

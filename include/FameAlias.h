@@ -2,7 +2,7 @@
 #include <Region.h>
 
 namespace gossip {
-    
+   
     class fameAlias {
     public:
         std::string name = "";
@@ -25,11 +25,10 @@ namespace gossip {
     class fameProfile {
     public:
         RE::TESObjectREFR* akActor;
-        std::uint16_t recognition;
         fameAlias* activeAlias;
         aliasMap aliasMap;
         regionMap regionMap;
-        fameProfile(RE::TESObjectREFR* akActor) : akActor(akActor), recognition(0) {}
+        fameProfile(RE::TESObjectREFR* akActor) : akActor(akActor) {}
         fameProfile(SKSE::SerializationInterface* evt);
         fameAlias& operator[](RE::TESFaction* fac) { 
             auto entry = aliasMap.find(fac);

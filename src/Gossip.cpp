@@ -5,12 +5,14 @@ namespace gossip {
         infoRelay = &fame;
     
     }
-    fameInfo &Gossip::operator[](RE::TESGlobal *global) {
+    fameInfo* Gossip::operator[](RE::TESGlobal *global) {
         auto entry = fame.find(global);
-        if (entry == fame.end())
+        if (entry == fame.end()) {
             logger::error("Could not find fame associated with {} {} {:x}", global->GetName(),
                           global->GetFormEditorID(), global->GetFormID());
-        return entry->second;
+            return nullptr;
+        }
+        return &entry->second;
     }
     region *Gossip::getRegionObj(RE::TESFaction * fac, RE::BGSLocation * loc) { 
         if (fac)
@@ -127,11 +129,13 @@ namespace gossip {
                     for (int i = 0; i < size; i++) {
                         int tolerance;
                         RE::BGSLocation *loc;
+                        RE::TESGlobal *glob;
                         readForm(evt, loc);
+                        readForm(evt, glob);
                         int tol;
                         evt->ReadRecordData(tol);
                         if (!loc) continue;
-                        o_gossip.regionTolerance.insert({loc, tol});
+                        o_gossip.regionTolerance[loc].insert(std::make_pair(glob, tol));
                     }
                     break;
                 }

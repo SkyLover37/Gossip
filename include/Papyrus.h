@@ -34,53 +34,59 @@ namespace gossip {
     RE::BGSLocation* resolveTrackedLocation(RE::StaticFunctionTag*, RE::BGSLocation* akLoc);
     namespace fame 
     {
-        bool switchFameLimit(bool local, RE::TESGlobal* Glob, RE::BGSLocation* Loc, RE::TESFaction* Fac);
-        bool isLimitLocal(RE::TESGlobal* Glob, RE::BGSLocation* akLoc, RE::TESFaction* akAlias);
+        bool useGlobalFameLimit(RE::StaticFunctionTag* , RE::TESGlobal* Glob, RE::BGSLocation* akLoc,
+                                RE::TESFaction* akFac);
+        bool useLocalFameLimit(RE::StaticFunctionTag*, RE::TESGlobal* Glob, RE::BGSLocation* Loc, RE::TESFaction* Fac);
+        bool isLimitLocal(RE::StaticFunctionTag*, RE::TESGlobal* Glob, RE::BGSLocation* akLoc, RE::TESFaction* akAlias);
 
-        int getFameValue(RE::TESGlobal* glob, RE::BGSLocation* akLoc, RE::TESFaction* akAlias);
-        int setFameValue(RE::TESGlobal* glob, int amt, RE::BGSLocation* akLoc, RE::TESFaction* akAlias, bool returnOldVal);
-        int modFameValue(RE::TESGlobal* glob, int amt, RE::BGSLocation* akLoc, RE::TESFaction* akAlias, bool returnOldVal);
+        int getFameValue(RE::StaticFunctionTag*, RE::TESGlobal* glob, RE::BGSLocation* akLoc, RE::TESFaction* akAlias);
+        int setFameValue(RE::StaticFunctionTag* ,RE::TESGlobal* glob, int amt, RE::BGSLocation* akLoc,
+                         RE::TESFaction* akAlias, bool returnOldVal);
+        int modFameValue(RE::StaticFunctionTag* , RE::TESGlobal* glob, int amt, RE::BGSLocation* akLoc,
+                         RE::TESFaction* akAlias, bool returnOldVal);
         
-        void setFameLimits(RE::TESGlobal* Glob, int min, int max, RE::BGSLocation* akLoc, RE::TESFaction* akFac);
-        int getFameMin(RE::TESGlobal* Glob);
-        int getFameMax(RE::TESGlobal* Glob);
+        void setFameLimits(RE::StaticFunctionTag*, RE::TESGlobal* Glob, int min, int max);
+        int getFameMin(RE::StaticFunctionTag*, RE::TESGlobal* Glob);
+        int getFameMax(RE::StaticFunctionTag*, RE::TESGlobal* Glob);
+
+        void setLocalFameLimits(RE::StaticFunctionTag*, RE::TESGlobal* Glob, int min, int max, RE::BGSLocation* akLoc,
+                                RE::TESFaction* akAlias);
+        int getLocalFameMin(RE::StaticFunctionTag*, RE::TESGlobal* Glob, RE::BGSLocation* akLoc,
+                            RE::TESFaction* akAlias);
+        int getLocalFameMax(RE::StaticFunctionTag*, RE::TESGlobal* Glob, RE::BGSLocation* akLoc,
+                            RE::TESFaction* akAlias);
     }  // namespace fame
     namespace gossipVal {
-        int getGossipValue(RE::TESGlobal* glob, RE::BGSLocation* akLoc, RE::TESFaction* akAlias);
-        int setGossipValue(RE::TESGlobal* glob, RE::BGSLocation* akLoc, RE::TESFaction* akAlias,
+        int getGossipValue(RE::StaticFunctionTag*, RE::TESGlobal* glob, RE::BGSLocation* akLoc,
+                           RE::TESFaction* akAlias);
+        int setGossipValue(RE::StaticFunctionTag*, RE::TESGlobal* glob, RE::BGSLocation* akLoc, RE::TESFaction* akAlias,
                            bool returnOldVal = false);
-        int modGossipValue(RE::TESGlobal* glob, RE::BGSLocation* akLoc, RE::TESFaction* akAlias,
+        int modGossipValue(RE::StaticFunctionTag*, RE::TESGlobal* glob, RE::BGSLocation* akLoc, RE::TESFaction* akAlias,
                            bool returnOldVal = false);
     }  // namespace gossipVal
     namespace tolerance {
-        int getToleranceValue(RE::TESGlobal* glob, RE::BGSLocation* akLoc, RE::TESFaction* akAlias);
-        int setToleranceValue(RE::TESGlobal* glob, int amt, RE::BGSLocation* akLoc, RE::TESFaction* akAlias,
+        int getToleranceValue(RE::StaticFunctionTag*, RE::TESGlobal* glob, RE::BGSLocation* akLoc);
+        int setToleranceValue(RE::StaticFunctionTag*, RE::TESGlobal* glob, int amt, RE::BGSLocation* akLoc,
                               bool returnOldVal = false);
-        int modToleranceValue(RE::TESGlobal* glob, int amt, RE::BGSLocation* akLoc, RE::TESFaction* akAlias,
+        int modToleranceValue(RE::StaticFunctionTag*, RE::TESGlobal* glob, int amt, RE::BGSLocation* akLoc,
                               bool returnOldVal = false);
         
-        int setToleranceLimits(RE::TESGlobal* Glob, int min, int max, bool local = false);
-        int getToleranceMin(RE::TESGlobal* Glob);
-        int getToleranceMax(RE::TESGlobal* Glob);
+        void setToleranceLimits(RE::StaticFunctionTag*, RE::TESGlobal* Glob, int min, int max, RE::BGSLocation* akLoc);
+        int getToleranceMin(RE::StaticFunctionTag*, RE::TESGlobal* Glob, RE::BGSLocation* akLoc);
+        int getToleranceMax(RE::StaticFunctionTag*, RE::TESGlobal* Glob, RE::BGSLocation* akLoc);
     }
     namespace ninterest {
-        int getInterestValue(RE::BGSLocation* akLoc, RE::TESFaction* akAlias);
-        int setInterestValue(int amt, RE::BGSLocation* akLoc, RE::TESFaction* akAlias, bool returnOldVal = false);
-        int modInterestValue(int amt, RE::BGSLocation* akLoc, RE::TESFaction* akAlias, bool returnOldVal = false);
+        int getInterestValue(RE::StaticFunctionTag*, RE::BGSLocation* akLoc, RE::TESFaction* akAlias);
+        int setInterestValue(RE::StaticFunctionTag*, int amt, RE::BGSLocation* akLoc, RE::TESFaction* akAlias,
+                             bool returnOldVal = false);
+        int modInterestValue(RE::StaticFunctionTag*, int amt, RE::BGSLocation* akLoc, RE::TESFaction* akAlias,
+                             bool returnOldVal = false);
         
-        void setInterestLimits(int min, int max, bool local = false);
-        int getInterestMin();
-        int getInterestMax();
+        void setInterestLimits(RE::StaticFunctionTag*, int min, int max, RE::TESFaction* akAlias);
+        int getInterestMin(RE::StaticFunctionTag*, RE::TESFaction* akAlias);
+        int getInterestMax(RE::StaticFunctionTag*, RE::TESFaction* akAlias);
     }  // namespace interest
-    namespace recognition {
-        int getRecognitionValue(RE::BGSLocation* akLoc, RE::TESFaction* akAlias);
-        int setRecognitionValue(int amt, RE::BGSLocation* akLoc, RE::TESFaction* akAlias, bool returnOldVal = false);
-        int modRecognitionValue(int amt, RE::BGSLocation* akLoc, RE::TESFaction* akAlias, bool returnOldVal = false);
-       
-        void setRecognitionLimits(int min, int max, bool local = false);
-        int getRecognitionMin();
-        int getRecognitionMax();
-    }
+    
 
 
     //bool setCurrentRegion(RE::StaticFunctionTag*, RE::BGSRE::BGSLocation** fameLoc);

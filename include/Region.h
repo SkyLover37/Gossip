@@ -11,6 +11,11 @@ namespace gossip {
             evt->ReadRecordData(raw);
             evt->ReadRecordData(val);
         }
+        interest(const interest& data) : limit(static_cast<limit>(data)){
+            raw = data.raw;
+            val = data.val;
+            
+        }
         void operator=(std::uint16_t amt) { val = clamp(raw = amt); }
         void operator+=(std::uint16_t amt) { val = clamp(raw += amt);}
         void operator-=(std::uint16_t amt) { val = clamp(raw -= amt); }
@@ -21,6 +26,7 @@ namespace gossip {
             evt->WriteRecordData(val);
 
         }
+        std::uint16_t getRaw() { return raw; }
     };
     class region : public interest{
     public:
@@ -28,11 +34,15 @@ namespace gossip {
         fameMap fameMap;
         region(RE::BGSLocation* tLoc) : tLoc(tLoc), interest(0, 0, 100) {};
         region(SKSE::SerializationInterface* evt);
+        region(const region& data) : interest(static_cast<interest>(data)) { tLoc = data.tLoc;
+            fameMap = data.fameMap;
+        }
         void operator()(SKSE::SerializationInterface* evt);
         fameData* operator[](fameInfo* info) {
             auto entry = fameMap.find(info);
             return entry != fameMap.end() ? &entry->second : nullptr;
         }
+        void operator=(std::uint16_t amt) { interest::operator=(amt); }
         bool operator!() { return tLoc; }
     };
     using regionMap = std::map<RE::BGSLocation*, region>;
