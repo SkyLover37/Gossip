@@ -3,11 +3,12 @@
 namespace gossip {
     class region{
     public:
-        RE::BGSLocation* tLoc;
-        fameMap fameMap;
+        RE::BGSLocation* tLoc = nullptr;
+        fameMap fameMap{};
         region(RE::BGSLocation* tLoc) : tLoc(tLoc) {};
         region(SKSE::SerializationInterface* evt);
-        region(const region& data)  { tLoc = data.tLoc;
+        region(const region& data)  { 
+            tLoc = data.tLoc;
             fameMap = data.fameMap;
         }
         void operator()(SKSE::SerializationInterface* evt);
@@ -20,7 +21,7 @@ namespace gossip {
             }
             return &entry->second;
         }
-        bool operator!() { return tLoc; }
+        bool operator!() { return !tLoc; }
     };
     using regionMap = std::map<RE::BGSLocation*, region>;
 }  // namespace gossip

@@ -25,7 +25,7 @@ namespace gossip {
             void operator-=(std::uint16_t amt) { val = clamp(raw -= amt); }
             operator int() { return val; }
             void operator()(SKSE::SerializationInterface* evt) {
-                limit::operator()(evt);
+                limit::save(evt);
                 evt->WriteRecordData(raw);
                 evt->WriteRecordData(val);
             }

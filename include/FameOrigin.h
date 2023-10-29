@@ -9,15 +9,14 @@ namespace gossip {
         T _max;
         bound() : _min(std::numeric_limits<T>::min()), _max(std::numeric_limits<T>::max()){};
         bound(T min, T max) : _min(min), _max(max) {}
-        bound(const bound& data) {
-            _min = data._min;
-            _max = data._max;
-        }
+        
         bound(SKSE::SerializationInterface* evt) {
+            logger::debug("Loading fame limit");
             evt->ReadRecordData(_min);
             evt->ReadRecordData(_max);
         };
-        void operator()(SKSE::SerializationInterface* evt) {
+        void save(SKSE::SerializationInterface* evt) {
+            logger::debug("Saving fame limit");
             evt->WriteRecordData(_min);
             evt->WriteRecordData(_max);
         }
@@ -36,15 +35,30 @@ namespace gossip {
     struct fameLimit : fameLimit_t {
         enum limit_type { local = 'LOCL', regional = 'REGL' };
         limit_type type = limit_type::local;
-        fameLimit(){};
+        //fameLimit(){};
         fameLimit(limit_type type, std::uint16_t min, std::uint16_t max) : type(type), fameLimit_t(min, max){};
-        fameLimit(SKSE::SerializationInterface* evt) : fameLimit_t(evt) { evt->ReadRecordData(type); };
-        void operator()(std::uint16_t min, std::uint16_t max) { 
+        fameLimit(SKSE::SerializationInterface* evt) : fameLimit_t(evt) {
+            logger::debug("loading fameLimit object");
+            char store;
+            evt->ReadRecordData(store); 
+            switch (store) {
+                case 'L': {
+                    type = limit_type::local;
+                    break;
+                }
+                case 'R': {
+                    type = limit_type::regional;
+                    break;
+                }
+            }
+        };
+        void setLimits(std::uint16_t min, std::uint16_t max) { 
             static_cast<fameLimit_t>(*this)(min, max);
         }
-        void operator()(SKSE::SerializationInterface* evt) {
-            static_cast<fameLimit_t>(*this)(evt);
-            evt->WriteRecordData(type);
+        void save(SKSE::SerializationInterface* evt) {
+            logger::debug("saving fameLimit object");
+            fameLimit_t::save(evt);
+            evt->WriteRecordData(static_cast<char>(type));
         }
         bool operator==(limit_type type) { return this->type == type; }
     };
@@ -69,7 +83,7 @@ namespace gossip {
             name = readString(evt);
         };
         fameInfo(RE::TESGlobal* newForm, std::string name, std::uint16_t min, std::uint16_t max, std::vector<std::string> tags);
-        void operator()(SKSE::SerializationInterface* evt);
+        void save(SKSE::SerializationInterface* evt);
         fameLimit* getLimit() { return static_cast<fameLimit*>(this); };
         RE::TESGlobal* getGlobal() { return fameGlobal;}
         std::string& getName() { return name; }
@@ -85,21 +99,15 @@ namespace gossip {
         
         std::uint16_t raw = 0;
         std::uint16_t val = 0;
-        fameLimit* limit;
+        fameLimit* limit = nullptr;
         
         std::uint16_t _gossip = 0;
         fameLimit localBound;
-        fameInfo* info;
+        fameInfo* info = nullptr;
         fameData(fameInfo* tmpInfo) : info(tmpInfo), localBound(fameLimit::limit_type::local, 0, 100), limit(tmpInfo->getLimit()) {};
         fameData(fameInfo* tmpInfo, std::uint16_t min, std::uint16_t max) : info(tmpInfo), localBound(fameLimit::limit_type::local, min, max) {}
         fameData(SKSE::SerializationInterface* evt);
-        fameData(const fameData& data) {
-            limit = data.limit;
-            localBound = data.localBound;
-            info = data.info;
-            val = limit->clamp(raw += data.val);
-            _gossip = data._gossip;
-        }
+        
         void operator+=(fameData& data) { 
             val = limit->clamp(raw += data.raw);
 
@@ -123,7 +131,7 @@ namespace gossip {
             val = limit->clamp(raw -= data);
         }
         operator int() { return val; }
-        void operator()(SKSE::SerializationInterface* evt);
+        void save(SKSE::SerializationInterface* evt);
     };
     
     using fameMap = std::map<fameInfo*, fameData>;

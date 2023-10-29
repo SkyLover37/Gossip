@@ -24,7 +24,7 @@ namespace gossip {
 
     class fameProfile {
     public:
-        RE::TESObjectREFR* akActor;
+        RE::TESObjectREFR* akActor = RE::PlayerCharacter::GetSingleton();
         fameAlias* activeAlias = nullptr;
         aliasMap aliasMap;
         regionMap regionMap;

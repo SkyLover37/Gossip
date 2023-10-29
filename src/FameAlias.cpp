@@ -1,13 +1,9 @@
 #include "FameAlias.h"
 //#include <Scandal.h>
 namespace gossip {
-    fameProfile::fameProfile(SKSE::SerializationInterface* evt){
-        readForm(evt, akActor);
-    }
-    void fameProfile::operator()(SKSE::SerializationInterface* evt) {
-        evt->WriteRecordData(akActor->formID);
-    }
+    
     fameAlias::fameAlias(SKSE::SerializationInterface* evt) {
+        logger::debug("loading alias");
         name = readString(evt);
         readForm(evt, faction);
 
@@ -22,16 +18,47 @@ namespace gossip {
         }
     }
     void fameAlias::operator()(SKSE::SerializationInterface* evt) {
-        
+        logger::debug("saving alias");
         writeString(evt, name);
         evt->WriteRecordData(faction->formID);
-            
+
+        evt->WriteRecordData(regionMap.size());
         for (auto& knownEntry : regionMap) {
-            evt->WriteRecordData(regionMap.size());
             evt->WriteRecordData(knownEntry.first->formID);
             knownEntry.second(evt);
         }
         
     }
-   
+    fameProfile::fameProfile(SKSE::SerializationInterface* evt) {
+        logger::debug("loading profile");
+        //readForm(evt, akActor);
+        std::size_t size = getSize(evt);
+        for (int i = 0; i < size; i++) {
+            auto data = fameAlias(evt);
+            aliasMap.insert(std::make_pair(data.faction, data));
+        }
+
+        size = getSize(evt);
+        logger::debug("Loading {} regions", size);
+        for (int i = 0; i < size; ++i) {
+            auto data = region(evt);
+            if (!data.tLoc) continue;
+            regionMap.insert(std::make_pair(data.tLoc, data));
+        }
+        logger::debug("Finished profile load");
+    }
+    void fameProfile::operator()(SKSE::SerializationInterface* evt) {
+        logger::debug("saving profile");
+        //evt->WriteRecordData(akActor->GetFormID());
+        evt->WriteRecordData(aliasMap.size());
+        for (auto entry : aliasMap) {
+            logger::debug("Saving {} alias", entry.second.faction->GetFormEditorID());
+            entry.second(evt);
+        }
+        evt->WriteRecordData(regionMap.size());
+        for (auto entry : regionMap) {
+            logger::debug("Saving {} region", entry.second.tLoc->GetFormEditorID());
+            entry.second(evt);
+        }
+    }
 }  // namespace gossip

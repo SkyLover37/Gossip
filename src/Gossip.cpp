@@ -99,6 +99,7 @@ namespace gossip {
             logger::debug("Saving gossip");
             evt->WriteRecordData(gossip.interest->GetFormID());
             evt->WriteRecordData(gossip.recognition->GetFormID());
+            evt->WriteRecordData(gossip.isActive);
         }
         std::size_t size = gossip.fame.size();
         if (!evt->OpenRecord('FAME', 1)) {
@@ -106,7 +107,7 @@ namespace gossip {
             evt->WriteRecordData(size);
             logger::info("saving {} fame", size);
             for (auto &famein : Gossip::getSingleton().fame) {
-                famein.second(evt);
+                famein.second.save(evt);
             }
         }
         if (!evt->OpenRecord('LOCN', 1)) {
@@ -123,7 +124,7 @@ namespace gossip {
             //evt->WriteRecordData(gossip->npcProfile.size());
             //for (auto &profile : gossip->npcProfile) {
             logger::debug("saving profile");
-            o_gossip.profile(evt);
+            o_gossip.profile.operator()(evt);
             //}
         }
         if (!evt->OpenRecord('TLRC', 1)) {
@@ -142,18 +143,20 @@ namespace gossip {
         std::uint32_t type;
         std::uint32_t version;
         std::uint32_t length;
-
+        bool isActive = false;
         bool error = false;
 
         while (!error && evt->GetNextRecordInfo(type, version, length)) {
             //
             switch (type) {
                 case 'GSIP': {
+                    logger::debug("Loading gossip object");
                     RE::TESGlobal *inter = nullptr;
                     RE::TESGlobal *Recog = nullptr;
                     readForm(evt, inter);
                     readForm(evt, Recog);
                     o_gossip.setup(inter, Recog);
+                    evt->ReadRecordData(isActive);
                     break;
                 }
                 case 'FAME': {
@@ -163,7 +166,21 @@ namespace gossip {
                     for (int i = 0; i < size; i++) {
                         auto info = fameInfo(evt);
                         if (!info) continue;
-                        o_gossip.fame.insert({info.getGlobal(), info});
+                       
+                        auto entry = o_gossip.fame.insert({info.getGlobal(), info});
+                        if (!entry.second) {
+                            if (entry.first->second.getGlobal() == o_gossip.interest) {
+                                logger::info("Loading interest");
+                                entry.first->second = info;
+                                continue;
+                            } else if (entry.first->second.getGlobal() == o_gossip.recognition) {
+                                logger::info("Loading recognition");
+                                entry.first->second = info;
+                                continue;
+                            }
+                            logger::debug("Fame entry found to already exist during load, this shouldn't happen.");
+                        }
+
                     }
                     break;
                 }
@@ -179,10 +196,12 @@ namespace gossip {
                     break;
                 }
                 case 'PROF': {
-                    o_gossip.profile(evt);
+                    logger::debug("Loading profile");
+                    o_gossip.profile = fameProfile(evt);
                     break;
                 }
                 case 'TLRC': {
+                    logger::debug("Loading tolerance");
                     std::size_t size;
                     evt->ReadRecordData(size);
                     for (int i = 0; i < size; i++) {
@@ -200,12 +219,14 @@ namespace gossip {
                 }
             }
         }
+        o_gossip.setActive(isActive);
         // gossip->busy = false;
     }
     void onRevert(SKSE::SerializationInterface *evt) { 
 
-         Gossip& gossip = Gossip::getSingleton();
+        Gossip& gossip = Gossip::getSingleton();
          
         gossip = Gossip();
+        infoRelay = &gossip.fame;
     }
 }  // namespace gossip
