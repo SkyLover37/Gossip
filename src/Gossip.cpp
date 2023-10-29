@@ -83,6 +83,19 @@ namespace gossip {
         return &data->second;
          
     }
+    tolerance *Gossip::getToleranceObj(RE::BGSLocation *loc, RE::TESGlobal *glob) {
+        if (!glob || !loc || !isActive) {
+            logger::debug("Failed to retrieve tolerance object {} {} {}",
+                          glob ? glob->GetFormEditorID() : "GLOBAL::ERROR",
+                          loc ? loc->GetFormEditorID() : "LOCATION::ERROR", isActive);
+            return nullptr;
+        }
+        logger::debug("Getting {} tolerance object in {}", glob->GetFormEditorID(), loc->GetFormEditorID());
+        auto locentry = regionTolerance[loc];
+        auto entry = locentry.insert(std::make_pair(glob, tolerance()));
+        return &entry.first->second;
+
+    }
     fameAlias* Gossip::getAliasObj(RE::TESFaction * fac) { 
         if (!fac) return nullptr; 
         auto entry = profile.aliasMap.find(fac);

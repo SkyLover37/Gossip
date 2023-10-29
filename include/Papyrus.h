@@ -70,7 +70,7 @@ namespace gossip {
         int modGossipValue(RE::StaticFunctionTag*, RE::TESGlobal* glob, RE::BGSLocation* akLoc, RE::TESFaction* akAlias,
                            bool returnOldVal = false);
     }  // namespace gossipVal
-    namespace tolerance {
+    namespace ntolerance {
         int getToleranceValue(RE::StaticFunctionTag*, RE::TESGlobal* glob, RE::BGSLocation* akLoc);
         int setToleranceValue(RE::StaticFunctionTag*, RE::TESGlobal* glob, int amt, RE::BGSLocation* akLoc,
                               bool returnOldVal = false);

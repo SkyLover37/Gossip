@@ -49,7 +49,7 @@ namespace gossip {
             if (!gossip.fame.contains(global) || force) {
 
                 gossip.fame.insert(std::make_pair(global, fameInfo(global, fameName, min, max, std::vector<std::string>())));
-                
+            
             }
     }
 
@@ -242,7 +242,7 @@ namespace gossip {
         void setFameLimits(RE::StaticFunctionTag *, RE::TESGlobal *Glob, int min, int max) {
             
             auto fameObj = o_gossip[Glob]->getLimit();
-            (*fameObj)(min, max);
+            (*fameObj).setLimits(min, max);
 
 
         }
@@ -334,14 +334,15 @@ namespace gossip {
             Registry->RegisterFunction("modGossipValue", script, modGossipValue);
         }
     }  // namespace gossipVal
-    namespace tolerance {
+    namespace ntolerance {
         int getToleranceValue(RE::StaticFunctionTag *, RE::TESGlobal *glob, RE::BGSLocation *akLoc) {
             if (!akLoc) {
                 akLoc = o_gossip.currentLocation();
                 if (!akLoc) return -1;
             }
-            auto &tol = o_gossip.regionTolerance[akLoc];
-            return o_gossip.regionTolerance[akLoc][glob];
+            auto tol = o_gossip.getToleranceObj(akLoc, glob);
+            if (!tol) return -1;
+            return *tol;
         }
         int setToleranceValue(RE::StaticFunctionTag *, RE::TESGlobal *glob, int amt, RE::BGSLocation *akLoc,
                               bool returnOldVal) {
@@ -349,10 +350,11 @@ namespace gossip {
                 akLoc = o_gossip.currentLocation();
                 if (!akLoc) return -1;
             }
-            auto &tol = o_gossip.regionTolerance[akLoc][glob];
-            int oldVal = tol;
-            tol = amt;
-            return returnOldVal ? oldVal : static_cast<int>(tol);
+            auto tol = o_gossip.getToleranceObj(akLoc, glob);
+            if (!tol) return -1;
+            int oldVal = *tol;
+            *tol = amt;
+            return returnOldVal ? oldVal : static_cast<int>(*tol);
         }
         int modToleranceValue(RE::StaticFunctionTag *, RE::TESGlobal *glob, int amt, RE::BGSLocation *akLoc,
                               bool returnOldVal) {
@@ -360,10 +362,11 @@ namespace gossip {
                 akLoc = o_gossip.currentLocation();
                 if (!akLoc) return -1;
             }
-            auto &tol = o_gossip.regionTolerance[akLoc][glob];
-            int oldVal = tol;
+            auto tol = o_gossip.getToleranceObj(akLoc, glob);
+            if (!tol) return -1;
+            int oldVal = *tol;
             tol += amt;
-            return returnOldVal ? oldVal : static_cast<int>(tol);
+            return returnOldVal ? oldVal : static_cast<int>(*tol);
         }
         void setToleranceLimits(RE::StaticFunctionTag *, RE::TESGlobal *Glob, int min, int max, RE::BGSLocation* akLoc) { 
             
@@ -371,7 +374,9 @@ namespace gossip {
                 akLoc = o_gossip.currentLocation();
                 if (!akLoc) return;
             }
-            o_gossip.regionTolerance[akLoc][Glob](min, max);
+             auto tol = o_gossip.getToleranceObj(akLoc, Glob);
+            if (!tol) return;
+             tol->operator()(min, max);
         }
         int getToleranceMin(RE::StaticFunctionTag *, RE::TESGlobal *Glob, RE::BGSLocation* akLoc) { 
             
@@ -379,14 +384,19 @@ namespace gossip {
                 akLoc = o_gossip.currentLocation();
                 if (!akLoc) return -1;
             }
-            return o_gossip.regionTolerance[akLoc][Glob].min(); }
+             auto tol = o_gossip.getToleranceObj(akLoc, Glob);
+             if (!tol) return -1;
+             return tol->min();
+        }
         int getToleranceMax(RE::StaticFunctionTag *, RE::TESGlobal *Glob, RE::BGSLocation* akLoc) { 
             
              if (!akLoc) {
                 akLoc = o_gossip.currentLocation();
                 if (!akLoc) return -1;
             }
-            return o_gossip.regionTolerance[akLoc][Glob].min();
+             auto tol = o_gossip.getToleranceObj(akLoc, Glob);
+             if (!tol) return -1;
+             return tol->max();
         }
         void papyrusRegister(RE::BSScript::IVirtualMachine *Registry) {
             std::string script = "GIP_SKSE";
@@ -428,7 +438,7 @@ namespace gossip {
         Registry->RegisterFunction("getVersionString", "GIP_SKSE", getVersionString);
         fame::papyrusRegister(Registry);
         gossipVal::papyrusRegister(Registry);
-        tolerance::papyrusRegister(Registry);
+        ntolerance::papyrusRegister(Registry);
 
         
         return true;
