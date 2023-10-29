@@ -1,6 +1,6 @@
 namespace gossip {
     void writeString(SKSE::SerializationInterface* evt, std::string string) {
-        std::size_t size = string.length() + 1;
+        std::size_t size = string.length();
         evt->WriteRecordData(size);
         evt->WriteRecordData(string.data(), static_cast<std::uint32_t>(size));
     }
@@ -8,7 +8,7 @@ namespace gossip {
         std::string name;
         std::size_t strings;
         evt->ReadRecordData(strings);
-        name.reserve(strings);
+        name.resize(strings);
         evt->ReadRecordData(name.data(), static_cast<std::uint32_t>(strings));
         return name;
     }

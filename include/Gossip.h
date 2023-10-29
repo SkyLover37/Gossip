@@ -33,20 +33,39 @@ namespace gossip {
             }
             std::uint16_t getRaw() { return raw; }
         };
+
+
         std::string version = "0.0.0";
-        bool active = false;
+        
+        bool isActive = false;
         std::vector<RE::BGSLocation*> trackedLocations;
         infoMap fame;
         std::map<RE::BGSLocation*, std::map<RE::TESGlobal*, tolerance>> regionTolerance{};
+        RE::TESGlobal* interest = nullptr;
+        RE::TESGlobal* recognition = nullptr;
+        //Originally planned to allow for NPCs to have fame.
         //std::map<RE::TESObjectREFR*, fameProfile> profiles;
         fameProfile profile;
         static Gossip& getSingleton() {
-            // static Gossip* container;
-            // if (!container) container = new Gossip;
+            
             return o_gossip;
         }
         Gossip();
-        
+        bool setup(RE::TESGlobal* inte, RE::TESGlobal* recog) { 
+            if (!inte || !recog) return false;
+            
+            interest = inte;
+            auto entry = fame.find(inte);
+            if (entry != fame.end()) fame.erase(interest);
+            fame.insert(std::make_pair(interest, fameInfo(interest, "Interest", 0, 100, std::vector<std::string>())));
+            
+            recognition = recog;
+            entry = fame.find(recognition);
+            if (entry != fame.end()) fame.erase(recognition);
+            fame.insert(std::make_pair(recognition, fameInfo(recognition, "Recognition", 0, 100, std::vector<std::string>())));
+            return true;
+        }
+
         RE::TESFaction* currentFaction();
         RE::BGSLocation* currentLocation();
         RE::BGSLocation* checkLocation(RE::BGSLocation* checkLoc, bool CheckLocation = true);
@@ -57,12 +76,19 @@ namespace gossip {
         region* getRegionObj(RE::TESFaction * fac, RE::BGSLocation * loc);
 
         fameAlias* getAliasObj(RE::TESFaction * fac);
-        bool setState(bool active);
+        bool isReady() {
+            
+            return interest || recognition;
+        }
+        bool setActive(bool set) {
+            return isReady() ? isActive = set : isActive = false;
+        };
 
-        static void onGameSaved(SKSE::SerializationInterface* evt);
-        static void onGameLoad(SKSE::SerializationInterface* evt);
-        static void onRevert(SKSE::SerializationInterface* evt);
 
-    } static o_gossip;
+
+    }extern o_gossip;
     
+    void onGameSaved(SKSE::SerializationInterface* evt);
+    void onGameLoad(SKSE::SerializationInterface* evt);
+    void onRevert(SKSE::SerializationInterface* evt);
 }

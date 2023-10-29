@@ -1,6 +1,6 @@
 #include <Region.h>
 namespace gossip {
-    region::region(SKSE::SerializationInterface* evt) : interest(evt){
+    region::region(SKSE::SerializationInterface* evt){
         
         readForm(evt, tLoc);
         std::size_t size;

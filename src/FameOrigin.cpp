@@ -7,15 +7,15 @@ namespace gossip {
     }
 
     void fameInfo::operator()(SKSE::SerializationInterface* evt) {
+        logger::debug("Saving {} fame", name);
+        static_cast<fameLimit>(*this)(evt);
         evt->WriteRecordData(fameGlobal->GetFormID());
         std::size_t size = tags.size();
         evt->WriteRecordData(size);
         for (int i = 0; i < tags.size(); i++) {
             writeString(evt, tags[i]);
         }
-        size = name.length() + 1;
-        evt->WriteRecordData(size);
-        evt->WriteRecordData(name.data(), static_cast<std::uint32_t>(size));
+        writeString(evt, name);
     }
 
     

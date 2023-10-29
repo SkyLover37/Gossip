@@ -39,10 +39,10 @@ namespace {
         log::trace("Initializing cosave serialization...");
         auto* serde = GetSerializationInterface();
         serde->SetUniqueID(_byteswap_ulong('GSIP'));
-        serde->SetSaveCallback(gossip::Gossip::onGameSaved);
+        serde->SetSaveCallback(gossip::onGameSaved);
         
-        serde->SetRevertCallback(gossip::Gossip::onRevert);
-        serde->SetLoadCallback(gossip::Gossip::onGameLoad);
+        serde->SetRevertCallback(gossip::onRevert);
+        serde->SetLoadCallback(gossip::onGameLoad);
         log::trace("Cosave serialization initialized.");
     }
     
@@ -139,7 +139,6 @@ SKSEPluginLoad(const LoadInterface* skse) {
     auto* plugin = PluginDeclaration::GetSingleton();
     auto version = plugin->GetVersion();
     log::info("{} {} is loading...", plugin->GetName(), version);
-    gossip::Gossip::getSingleton();
 
     Init(skse);
     InitializeMessaging();

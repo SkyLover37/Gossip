@@ -2,8 +2,9 @@
 namespace gossip {
     void writeString(SKSE::SerializationInterface* evt, std::string string);
     std::string readString(SKSE::SerializationInterface* evt);
+
     template <class T>
-    bool readForm(SKSE::SerializationInterface* evt, T* req) {
+    bool readForm(SKSE::SerializationInterface* evt, T*& req) {
         RE::FormID oldForm;
         RE::FormID newForm = 0;
         evt->ReadRecordData(oldForm);

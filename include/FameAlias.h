@@ -2,7 +2,7 @@
 #include <Region.h>
 
 namespace gossip {
-   
+    
     class fameAlias {
     public:
         std::string name = "";
@@ -25,7 +25,7 @@ namespace gossip {
     class fameProfile {
     public:
         RE::TESObjectREFR* akActor;
-        fameAlias* activeAlias;
+        fameAlias* activeAlias = nullptr;
         aliasMap aliasMap;
         regionMap regionMap;
         fameProfile(RE::TESObjectREFR* akActor) : akActor(akActor) {}
@@ -37,21 +37,9 @@ namespace gossip {
                               fac->GetFormEditorID(), fac->GetFormID());
             return entry->second;
         }
-        region& operator[](RE::BGSLocation* loc) { 
-            auto entry = regionMap.find(loc);
-            if (entry == regionMap.end())
-                logger::error("Could not find fameProfile region associated with {} {} {:x}", loc->GetName(),
-                              loc->GetFormEditorID(), loc->GetFormID());
-            return entry->second;
-        }
+        
         void operator=(fameAlias* val) { activeAlias = val; }
         void operator()(SKSE::SerializationInterface* evt);
-        void operator()(fameAlias* val){ 
-            for (auto& entry : val->regionMap) {
-                auto regionEntry = regionMap.find(entry.first);
-                if (regionEntry != regionMap.end())
-                    regionEntry->second += entry.second;
-            }
-        };
+        
     };
 }  // namespace gossip

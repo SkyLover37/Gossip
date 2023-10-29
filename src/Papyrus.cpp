@@ -2,20 +2,22 @@
 #include <Papyrus.h>
 
 namespace gossip {
+    bool isReady() { return o_gossip.isReady(); }
+    bool setup(RE::StaticFunctionTag *, RE::TESGlobal *interest, RE::TESGlobal *recognition) { return o_gossip.setup(interest, recognition); }
     bool getActive(RE::StaticFunctionTag *) { 
-        return o_gossip.active; 
+        return o_gossip.isActive; 
     }
     bool setActive(RE::StaticFunctionTag *) { 
-        o_gossip.setState(true);
-        return o_gossip.active;
+        logger::debug("setting gossip to active {}", o_gossip.setActive(true));
+        return o_gossip.isActive;
     }
     bool setInactive(RE::StaticFunctionTag *) {
-        o_gossip.setState(false);
-        return o_gossip.active;
+        o_gossip.setActive(false);
+        return o_gossip.isActive;
     }
     float getVersion(RE::StaticFunctionTag *) { 
         auto plugin = PluginDeclaration::GetSingleton();
-        return plugin->GetVersion().major() + (plugin->GetVersion().minor()/10); }
+        return plugin->GetVersion().major() + (plugin->GetVersion().minor()/10.0f); }
     std::string getVersionString(RE::StaticFunctionTag *) { return PluginDeclaration::GetSingleton()->GetVersion().string(); }
 
     bool gossip::newFameAlias(RE::StaticFunctionTag *, RE::TESFaction *Alias, std::string aliasName) {
@@ -31,17 +33,32 @@ namespace gossip {
     }
 
     void gossip::newLocation(RE::StaticFunctionTag*, RE::BGSLocation* newLoc) {
+        if (!newLoc) return;
         Gossip& gossip = Gossip::getSingleton();
+        //check if location is already tracked
         if (gossip.checkLocation(newLoc) == nullptr) {
+            logger::info("New location: {}", newLoc->GetFormEditorID());
             gossip.trackedLocations.push_back(newLoc);
+            //gossip.profile.regionMap.insert(std::make_pair(newLoc, ))
         }
     }
 
-    void gossip::newFame(RE::StaticFunctionTag*, RE::TESGlobal* global, std::string fameName, std::vector<std::string> tags, int min,
+    void newFame(RE::StaticFunctionTag *, RE::TESGlobal *global, std::string fameName, int min, int max, bool force) {
+            if (!global) return;
+            Gossip &gossip = Gossip::getSingleton();
+            if (!gossip.fame.contains(global) || force) {
+
+                gossip.fame.insert(std::make_pair(global, fameInfo(global, fameName, min, max, std::vector<std::string>())));
+                
+            }
+    }
+
+    void gossip::newFameWithTags(RE::StaticFunctionTag*, RE::TESGlobal* global, std::string fameName, std::vector<std::string> tags, int min,
         int max, bool force) {
+            if (!global) return;
         Gossip& gossip = Gossip::getSingleton();
         if(!gossip.fame.contains(global) || force){
-            *gossip[global] = fameInfo(global, fameName, min, max, tags);
+            gossip.fame.insert(std::make_pair(global,  fameInfo(global, fameName, min, max, tags)));
         }
     }
 
@@ -78,6 +95,12 @@ namespace gossip {
         return Gossip::getSingleton()[valueGlobal]->tags;
     }
 
+    void setupGossip(RE::StaticFunctionTag *, RE::TESGlobal *interest, RE::TESGlobal* recognition) {
+        if (!interest || !recognition) return;
+
+    }
+
+
 
     std::string gossip::getFameName(RE::StaticFunctionTag *, RE::TESGlobal *global) { 
         Gossip& gossip = Gossip::getSingleton();
@@ -85,11 +108,13 @@ namespace gossip {
     }
 
     std::vector<RE::TESGlobal *> gossip::getAllFameGlobals(RE::StaticFunctionTag *) {
-        Gossip&gossip = Gossip::getSingleton();
-        std::vector<RE::TESGlobal *> globals;
+        Gossip& gossip = Gossip::getSingleton();
+        logger::debug("getAllFameGlobals()");
+        std::vector<RE::TESGlobal *> globals{};
 
-        //globals.resize(gossip.fame.size());
+        globals.reserve(gossip.fame.size());
         for (auto &var : gossip.fame) {
+            logger::debug("Adding {} to array.", var.first ? var.first->GetFormEditorID() : "none");
             globals.push_back(var.first);
         }
         return globals;
@@ -138,8 +163,10 @@ namespace gossip {
     namespace fame {
         bool useGlobalFameLimit(RE::StaticFunctionTag *, RE::TESGlobal *Glob, RE::BGSLocation *akLoc,
                                 RE::TESFaction *akFac) {
-            if (!akLoc) akLoc = o_gossip.currentLocation();
-            if (!akFac) akFac = o_gossip.currentFaction();
+            if (!akLoc) {
+                akLoc = o_gossip.currentLocation();
+                if (!akLoc) return false;
+            }
             auto fameObj = o_gossip.getFameObj(Glob, akFac, akLoc);
 
             fameObj->limit = fameObj->info->getLimit();
@@ -148,8 +175,10 @@ namespace gossip {
         }
         bool useLocalFameLimit(RE::StaticFunctionTag *, RE::TESGlobal *Glob, RE::BGSLocation *Loc,
                                RE::TESFaction *Fac) {
-            if (!Loc) Loc = o_gossip.currentLocation();
-            if (!Fac) Fac = o_gossip.currentFaction();
+            if (!Loc) {
+                Loc = o_gossip.currentLocation();
+                if (!Loc) return false;
+            }
 
             auto fameObj = o_gossip.getFameObj(Glob, Fac, Loc);
             
@@ -159,23 +188,31 @@ namespace gossip {
         }
         bool isLimitLocal(RE::StaticFunctionTag *, RE::TESGlobal *Glob, RE::BGSLocation *akLoc,
                           RE::TESFaction *akAlias) { 
-            if (!akLoc) akLoc = o_gossip.currentLocation();
-            if (!akAlias) akAlias = o_gossip.currentFaction();
+            
+             if (!akLoc) {
+                akLoc = o_gossip.currentLocation();
+                if (!akLoc) return false;
+            }
                 
             return o_gossip.getFameObj(Glob, akAlias, akLoc)->localBound == fameLimit::limit_type::local;
         }
         int getFameValue(RE::StaticFunctionTag *, RE::TESGlobal *glob, RE::BGSLocation *akLoc,
                          RE::TESFaction *akAlias) { 
-            if (!akLoc) akLoc = o_gossip.currentLocation();
-            if (!akAlias) akAlias = o_gossip.currentFaction();
-
-            return *o_gossip.getFameObj(glob, akAlias, akLoc);
+            if (!akLoc) {
+                akLoc = o_gossip.currentLocation();
+                if (!akLoc) return -1;
+            }
+            logger::debug("Getting Fame in {} {} {}", glob->GetName(), akLoc->GetName(),
+                          akAlias ? akAlias->GetName() : "none");
+            auto fameObj = o_gossip.getFameObj(glob, akAlias, akLoc);
+            return fameObj ? *fameObj : -1;
         }
         int setFameValue(RE::StaticFunctionTag *, RE::TESGlobal *glob, int amt, RE::BGSLocation *akLoc,
                          RE::TESFaction *akAlias, bool returnOldVal) {
-            if (!akLoc) akLoc = o_gossip.currentLocation();
-            if (!akAlias) akAlias = o_gossip.currentFaction();
-
+            if (!akLoc) {
+                akLoc = o_gossip.currentLocation();
+                if (!akLoc) return -1;
+            }
             
             auto fameObj = o_gossip.getFameObj(glob, akAlias, akLoc);
             int oldVal = *fameObj;
@@ -185,10 +222,18 @@ namespace gossip {
         }
         int modFameValue(RE::StaticFunctionTag *, RE::TESGlobal *glob, int amt, RE::BGSLocation *akLoc,
                          RE::TESFaction *akAlias, bool returnOldVal) {
-            if (!akLoc) akLoc = o_gossip.currentLocation();
-            if (!akAlias) akAlias = o_gossip.currentFaction();
-
+            
+            if (!akLoc) 
+            {
+                akLoc = o_gossip.currentLocation();
+                if (!akLoc) return -1;
+            }
+                
+            
+            logger::debug("Modding {}'s {} Fame in {}", akAlias ? akAlias->GetName() : "Player" , glob->GetFormEditorID(),
+                          akLoc->GetName());
             auto fameObj = o_gossip.getFameObj(glob, akAlias, akLoc);
+            if (!fameObj) return -1;
             int oldVal = *fameObj;
 
             *fameObj += amt;
@@ -220,8 +265,10 @@ namespace gossip {
         int getLocalFameMin(RE::StaticFunctionTag *, RE::TESGlobal *Glob, RE::BGSLocation *akLoc,
                             RE::TESFaction *akAlias) { 
             
-            if (!akLoc) akLoc = o_gossip.currentLocation();
-            if (!akAlias) akAlias = o_gossip.currentFaction();
+             if (!akLoc) {
+                akLoc = o_gossip.currentLocation();
+                if (!akLoc) return -1;
+            }
              
             return o_gossip.getFameObj(Glob, akAlias, akLoc)->limit->min(); 
         }
@@ -255,22 +302,28 @@ namespace gossip {
     namespace gossipVal {
         int getGossipValue(RE::StaticFunctionTag *, RE::TESGlobal *glob, RE::BGSLocation *akLoc,
                            RE::TESFaction *akAlias) {
-            if (!akLoc) akLoc = o_gossip.currentLocation();
-            if (!akAlias) akAlias = o_gossip.currentFaction();
+            if (!akLoc) {
+                akLoc = o_gossip.currentLocation();
+                if (!akLoc) return -1;
+            }
             
             return 0;
         }
         int setGossipValue(RE::StaticFunctionTag *, RE::TESGlobal *glob, RE::BGSLocation *akLoc,
                            RE::TESFaction *akAlias, bool returnOldVal) {
-            if (!akLoc) akLoc = o_gossip.currentLocation();
-            if (!akAlias) akAlias = o_gossip.currentFaction();
+            if (!akLoc) {
+                akLoc = o_gossip.currentLocation();
+                if (!akLoc) return -1;
+            }
             
             return 0;
         }
         int modGossipValue(RE::StaticFunctionTag *, RE::TESGlobal *glob, RE::BGSLocation *akLoc,
                            RE::TESFaction *akAlias, bool returnOldVal) {
-            if (!akLoc) akLoc = o_gossip.currentLocation();
-            if (!akAlias) akAlias = o_gossip.currentFaction();
+            if (!akLoc) {
+                akLoc = o_gossip.currentLocation();
+                if (!akLoc) return -1;
+            }
             
             return 0;
         }
@@ -283,13 +336,19 @@ namespace gossip {
     }  // namespace gossipVal
     namespace tolerance {
         int getToleranceValue(RE::StaticFunctionTag *, RE::TESGlobal *glob, RE::BGSLocation *akLoc) {
-            if (!akLoc) akLoc = o_gossip.currentLocation();
+            if (!akLoc) {
+                akLoc = o_gossip.currentLocation();
+                if (!akLoc) return -1;
+            }
             auto &tol = o_gossip.regionTolerance[akLoc];
             return o_gossip.regionTolerance[akLoc][glob];
         }
         int setToleranceValue(RE::StaticFunctionTag *, RE::TESGlobal *glob, int amt, RE::BGSLocation *akLoc,
                               bool returnOldVal) {
-            if (!akLoc) akLoc = o_gossip.currentLocation();
+            if (!akLoc) {
+                akLoc = o_gossip.currentLocation();
+                if (!akLoc) return -1;
+            }
             auto &tol = o_gossip.regionTolerance[akLoc][glob];
             int oldVal = tol;
             tol = amt;
@@ -297,7 +356,10 @@ namespace gossip {
         }
         int modToleranceValue(RE::StaticFunctionTag *, RE::TESGlobal *glob, int amt, RE::BGSLocation *akLoc,
                               bool returnOldVal) {
-            if (!akLoc) akLoc = o_gossip.currentLocation();
+            if (!akLoc) {
+                akLoc = o_gossip.currentLocation();
+                if (!akLoc) return -1;
+            }
             auto &tol = o_gossip.regionTolerance[akLoc][glob];
             int oldVal = tol;
             tol += amt;
@@ -305,16 +367,25 @@ namespace gossip {
         }
         void setToleranceLimits(RE::StaticFunctionTag *, RE::TESGlobal *Glob, int min, int max, RE::BGSLocation* akLoc) { 
             
-            if (!akLoc) akLoc = o_gossip.currentLocation();
+             if (!akLoc) {
+                akLoc = o_gossip.currentLocation();
+                if (!akLoc) return;
+            }
             o_gossip.regionTolerance[akLoc][Glob](min, max);
         }
         int getToleranceMin(RE::StaticFunctionTag *, RE::TESGlobal *Glob, RE::BGSLocation* akLoc) { 
             
-            if (!akLoc) akLoc = o_gossip.currentLocation();
+             if (!akLoc) {
+                akLoc = o_gossip.currentLocation();
+                if (!akLoc) return -1;
+            }
             return o_gossip.regionTolerance[akLoc][Glob].min(); }
         int getToleranceMax(RE::StaticFunctionTag *, RE::TESGlobal *Glob, RE::BGSLocation* akLoc) { 
             
-            if (!akLoc) akLoc = o_gossip.currentLocation();
+             if (!akLoc) {
+                akLoc = o_gossip.currentLocation();
+                if (!akLoc) return -1;
+            }
             return o_gossip.regionTolerance[akLoc][Glob].min();
         }
         void papyrusRegister(RE::BSScript::IVirtualMachine *Registry) {
@@ -326,59 +397,13 @@ namespace gossip {
             Registry->RegisterFunction("getToleranceMin", script, getToleranceMin);
             Registry->RegisterFunction("getToleranceMax", script, getToleranceMax);
         }
-    }  // namespace tolerance
-    namespace ninterest {
-        int getInterestValue(RE::StaticFunctionTag *, RE::BGSLocation *akLoc, RE::TESFaction *akAlias) { 
-            if (!akLoc) akLoc = o_gossip.currentLocation();
-            if (!akAlias) akAlias = o_gossip.currentFaction();
-            return *o_gossip.getRegionObj(akAlias, akLoc);
-        }
-        int setInterestValue(RE::StaticFunctionTag *, int amt, RE::BGSLocation *akLoc, RE::TESFaction *akAlias,
-                             bool returnOldVal) {
-            if (!akLoc) akLoc = o_gossip.currentLocation();
-            if (!akAlias) akAlias = o_gossip.currentFaction();
-            auto &regionObj = *o_gossip.getRegionObj(akAlias, akLoc);
-            int oldVal = regionObj;
-            regionObj = amt;
-            return returnOldVal ? oldVal : regionObj;
-        }
-        int modInterestValue(RE::StaticFunctionTag *, int amt, RE::BGSLocation *akLoc, RE::TESFaction *akAlias,
-                             bool returnOldVal) {
-            if (!akLoc) akLoc = o_gossip.currentLocation();
-            if (!akAlias) akAlias = o_gossip.currentFaction();
-            
-            auto &regionObj = *o_gossip.getRegionObj(akAlias, akLoc);
-            int oldVal = regionObj;
-            regionObj += amt;
-            return returnOldVal ? oldVal : regionObj;
-
-            return 0;
-        }
-        void setInterestLimits(RE::StaticFunctionTag *, int min, int max, RE::TESFaction* akAlias) {
-            if (!akAlias) akAlias = o_gossip.currentFaction();
-        }
-        int getInterestMin(RE::StaticFunctionTag *, RE::TESFaction* akAlias) { 
-            
-            if (!akAlias) akAlias = o_gossip.currentFaction();
-            return 0; }
-        int getInterestMax(RE::StaticFunctionTag *, RE::TESFaction* akAlias) { 
-            
-            if (!akAlias) akAlias = o_gossip.currentFaction();
-            return 0; }
-        void papyrusRegister(RE::BSScript::IVirtualMachine *Registry) {
-            std::string script = "GIP_SKSE";
-            Registry->RegisterFunction("getInterestValue", script, getInterestValue);
-            Registry->RegisterFunction("setInterestValue", script, setInterestValue);
-            Registry->RegisterFunction("modInterestValue", script, modInterestValue);
-            Registry->RegisterFunction("setInterestLimits", script, setInterestLimits);
-            Registry->RegisterFunction("getInterestMin", script, getInterestMin);
-            Registry->RegisterFunction("getInterestMax", script, getInterestMax);
-        }
-    }  // namespace interest
+    }
 
     bool papyrusRegister(RE::BSScript::IVirtualMachine *Registry) {
         std::string script = "GIP_SKSE";
+        Registry->RegisterFunction("setup", script, setup);
         Registry->RegisterFunction("newFame", "GIP_SKSE", newFame);
+        Registry->RegisterFunction("newFameWithTags", script, newFameWithTags);
         Registry->RegisterFunction("newFameAlias", "GIP_SKSE", newFameAlias);
         Registry->RegisterFunction("newLocation", "GIP_SKSE", newLocation);
         Registry->RegisterFunction("getFameGlobal", "GIP_SKSE", getFameGlobal);
@@ -398,12 +423,11 @@ namespace gossip {
         Registry->RegisterFunction("getAllLocationNames", "GIP_SKSE", getAllLocationNames);
         Registry->RegisterFunction("setActive", "GIP_SKSE", setActive);
         Registry->RegisterFunction("setInactive", "GIP_SKSE", setInactive);
-        Registry->RegisterFunction("getActive", "GIP_SKSE", getActive);
+        Registry->RegisterFunction("isActive", "GIP_SKSE", getActive);
         Registry->RegisterFunction("getVersion", "GIP_SKSE", getVersion);
         Registry->RegisterFunction("getVersionString", "GIP_SKSE", getVersionString);
         fame::papyrusRegister(Registry);
         gossipVal::papyrusRegister(Registry);
-        ninterest::papyrusRegister(Registry);
         tolerance::papyrusRegister(Registry);
 
         

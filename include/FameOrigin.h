@@ -2,7 +2,7 @@
 #include <valueData.h>
 namespace gossip {
     struct default_limit_tag {};
-
+    
     template <typename T>
     struct bound {
         T _min;
@@ -35,10 +35,17 @@ namespace gossip {
     typedef bound<std::uint16_t> fameLimit_t;
     struct fameLimit : fameLimit_t {
         enum limit_type { local = 'LOCL', regional = 'REGL' };
-        limit_type type;
+        limit_type type = limit_type::local;
         fameLimit(){};
         fameLimit(limit_type type, std::uint16_t min, std::uint16_t max) : type(type), fameLimit_t(min, max){};
         fameLimit(SKSE::SerializationInterface* evt) : fameLimit_t(evt) { evt->ReadRecordData(type); };
+        void operator()(std::uint16_t min, std::uint16_t max) { 
+            static_cast<fameLimit_t>(*this)(min, max);
+        }
+        void operator()(SKSE::SerializationInterface* evt) {
+            static_cast<fameLimit_t>(*this)(evt);
+            evt->WriteRecordData(type);
+        }
         bool operator==(limit_type type) { return this->type == type; }
     };
     
@@ -50,14 +57,13 @@ namespace gossip {
         RE::TESGlobal* fameGlobal = nullptr;
         
         fameInfo(SKSE::SerializationInterface* evt) : fameLimit(evt) {
-            
-            RE::TESGlobal* fameGlobal;
+           
             readForm(evt, fameGlobal);
             std::size_t size;
 
             evt->ReadRecordData(size);
             tags.reserve(size);
-            for (int i = 0; i < size; ++i) {
+            for (int i = 0; i < size; i++) {
                 tags.push_back(readString(evt));
             }
             name = readString(evt);
@@ -67,7 +73,8 @@ namespace gossip {
         fameLimit* getLimit() { return static_cast<fameLimit*>(this); };
         RE::TESGlobal* getGlobal() { return fameGlobal;}
         std::string& getName() { return name; }
-        bool operator!() { return fameGlobal; }
+        bool operator!() { 
+            return !fameGlobal; }
     };
     using infoMap = std::map<RE::TESGlobal*, fameInfo>;
     extern infoMap* infoRelay;
@@ -76,14 +83,14 @@ namespace gossip {
     class fameData {
     public:
         
-        std::uint16_t raw;
-        std::uint16_t val;
+        std::uint16_t raw = 0;
+        std::uint16_t val = 0;
         fameLimit* limit;
         
-        std::uint16_t _gossip;
+        std::uint16_t _gossip = 0;
         fameLimit localBound;
         fameInfo* info;
-        fameData(fameInfo* tmpInfo) : info(tmpInfo), localBound(fameLimit::limit_type::local, 0, 100), _gossip(0), limit(info->getLimit()) {};
+        fameData(fameInfo* tmpInfo) : info(tmpInfo), localBound(fameLimit::limit_type::local, 0, 100), limit(tmpInfo->getLimit()) {};
         fameData(fameInfo* tmpInfo, std::uint16_t min, std::uint16_t max) : info(tmpInfo), localBound(fameLimit::limit_type::local, min, max) {}
         fameData(SKSE::SerializationInterface* evt);
         fameData(const fameData& data) {

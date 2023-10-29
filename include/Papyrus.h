@@ -3,6 +3,10 @@
 #include <Gossip.h>
 
 namespace gossip {
+
+    bool isReady();
+    bool setup(RE::StaticFunctionTag*, RE::TESGlobal* interest, RE::TESGlobal* recognition);
+
     bool getActive(RE::StaticFunctionTag*);
     bool setActive(RE::StaticFunctionTag*);
     bool setInactive(RE::StaticFunctionTag*);
@@ -14,13 +18,15 @@ namespace gossip {
     bool setCurrentAlias(RE::StaticFunctionTag*, RE::TESFaction* actorAlias);
 
     void newLocation(RE::StaticFunctionTag*, RE::BGSLocation* newLoc);
-    void newFame(RE::StaticFunctionTag*, RE::TESGlobal* global, std::string fameName, std::vector<std::string> tags, int min,
+    void newFame(RE::StaticFunctionTag*, RE::TESGlobal* global, std::string fameName,
+                 int min, int max, bool force);
+    void newFameWithTags(RE::StaticFunctionTag*, RE::TESGlobal* global, std::string fameName, std::vector<std::string> tags, int min,
                         int max, bool force);
     void addFameTag(RE::StaticFunctionTag*, RE::TESGlobal* valueKey, std::string valueTag);
     bool removeFameTag(RE::StaticFunctionTag*, RE::TESGlobal* valueKey, std::string valueTag);
 
     std::vector<std::string> getValueTags(RE::StaticFunctionTag*, RE::TESGlobal* valueGlobal);
-
+    void setupGossip(RE::StaticFunctionTag*, RE::TESGlobal* interest, RE::TESGlobal* recognition);
     RE::TESGlobal* getFameGlobal(RE::StaticFunctionTag*, std::string globalName);
     std::string getFameName(RE::StaticFunctionTag*, RE::TESGlobal* global);
     std::vector<RE::TESGlobal*> getAllFameGlobals(RE::StaticFunctionTag*);
