@@ -20,7 +20,8 @@ namespace gossip {
             evt->WriteRecordData(_min);
             evt->WriteRecordData(_max);
         }
-        void operator()(T min, T max) {
+        void setLimits(T min, T max) {
+            logger::debug("Setting limits 2 {} {}", min, max);
             _min = min;
             _max = max;
         }
@@ -34,7 +35,7 @@ namespace gossip {
     typedef bound<std::uint16_t> fameLimit_t;
     struct fameLimit : fameLimit_t {
         enum limit_type { local = 'LOCL', regional = 'REGL' };
-        limit_type type = limit_type::local;
+        limit_type type = limit_type::regional;
         //fameLimit(){};
         fameLimit(limit_type type, std::uint16_t min, std::uint16_t max) : type(type), fameLimit_t(min, max){};
         fameLimit(SKSE::SerializationInterface* evt) : fameLimit_t(evt) {
@@ -53,7 +54,8 @@ namespace gossip {
             }
         };
         void setLimits(std::uint16_t min, std::uint16_t max) { 
-            static_cast<fameLimit_t>(*this)(min, max);
+            logger::debug("setting limits {} {} ", min, max);
+            fameLimit_t::setLimits(min, max);
         }
         void save(SKSE::SerializationInterface* evt) {
             logger::debug("saving fameLimit object");
@@ -121,14 +123,11 @@ namespace gossip {
             val = limit->clamp(raw += data.val);
             _gossip = data._gossip;
         }
-        void operator=(int data) { 
+        void set(int data) { 
             val = limit->clamp(raw = data);
         }
-        void operator+=(int data) {
+        void mod(int data) { 
             val = limit->clamp(raw += data);
-        }
-        void operator-=(int data) {
-            val = limit->clamp(raw -= data);
         }
         operator int() { return val; }
         void save(SKSE::SerializationInterface* evt);

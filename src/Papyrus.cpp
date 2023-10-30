@@ -95,10 +95,6 @@ namespace gossip {
         return Gossip::getSingleton()[valueGlobal]->tags;
     }
 
-    void setupGossip(RE::StaticFunctionTag *, RE::TESGlobal *interest, RE::TESGlobal* recognition) {
-        if (!interest || !recognition) return;
-
-    }
 
 
 
@@ -168,7 +164,7 @@ namespace gossip {
                 if (!akLoc) return false;
             }
             auto fameObj = o_gossip.getFameObj(Glob, akFac, akLoc);
-
+            if (!fameObj) return false;
             fameObj->limit = fameObj->info->getLimit();
 
             return *fameObj->limit == fameLimit::limit_type::regional;
@@ -181,9 +177,10 @@ namespace gossip {
             }
 
             auto fameObj = o_gossip.getFameObj(Glob, Fac, Loc);
-            
+            if (!fameObj) return false;
             fameObj->limit = &fameObj->localBound;
-           
+            logger::debug("localBound: {} {}", fameObj->localBound.min(), fameObj->localBound.max());
+            logger::debug("limit: ", fameObj->limit->min(), fameObj->limit->max());
             return *(fameObj->limit) == fameLimit::limit_type::local;
         }
         bool isLimitLocal(RE::StaticFunctionTag *, RE::TESGlobal *Glob, RE::BGSLocation *akLoc,
@@ -193,8 +190,9 @@ namespace gossip {
                 akLoc = o_gossip.currentLocation();
                 if (!akLoc) return false;
             }
-                
-            return o_gossip.getFameObj(Glob, akAlias, akLoc)->localBound == fameLimit::limit_type::local;
+             auto fameObj = o_gossip.getFameObj(Glob, akAlias, akLoc);
+            if (!fameObj) return false;
+            return fameObj->limit->type == fameLimit::limit_type::local;
         }
         int getFameValue(RE::StaticFunctionTag *, RE::TESGlobal *glob, RE::BGSLocation *akLoc,
                          RE::TESFaction *akAlias) { 
@@ -215,9 +213,10 @@ namespace gossip {
             }
             
             auto fameObj = o_gossip.getFameObj(glob, akAlias, akLoc);
+            if (!fameObj) return -1;
             int oldVal = *fameObj;
 
-            *fameObj = amt;
+            fameObj->set(amt);
             return returnOldVal ? oldVal : *fameObj;
         }
         int modFameValue(RE::StaticFunctionTag *, RE::TESGlobal *glob, int amt, RE::BGSLocation *akLoc,
@@ -236,13 +235,13 @@ namespace gossip {
             if (!fameObj) return -1;
             int oldVal = *fameObj;
 
-            *fameObj += amt;
+            fameObj->mod(amt);
             return returnOldVal ? oldVal : *fameObj;
         }
         void setFameLimits(RE::StaticFunctionTag *, RE::TESGlobal *Glob, int min, int max) {
             
             auto fameObj = o_gossip[Glob]->getLimit();
-            (*fameObj).setLimits(min, max);
+            fameObj->setLimits(min, max);
 
 
         }
@@ -257,9 +256,9 @@ namespace gossip {
                                 RE::TESFaction *akAlias) {
             if (!akLoc) akLoc = o_gossip.currentLocation();
             if (!akAlias) akAlias = o_gossip.currentFaction();
-             
+            logger::debug("setting local limits to {} {}", min, max);
             auto fameObj = o_gossip.getFameObj(Glob, akAlias, akLoc);
-            fameObj->localBound(min, max);
+            fameObj->localBound.setLimits(min, max);
 
         }
         int getLocalFameMin(RE::StaticFunctionTag *, RE::TESGlobal *Glob, RE::BGSLocation *akLoc,
@@ -270,14 +269,14 @@ namespace gossip {
                 if (!akLoc) return -1;
             }
              
-            return o_gossip.getFameObj(Glob, akAlias, akLoc)->limit->min(); 
+            return o_gossip.getFameObj(Glob, akAlias, akLoc)->localBound.min(); 
         }
         int getLocalFameMax(RE::StaticFunctionTag *, RE::TESGlobal *Glob, RE::BGSLocation *akLoc,
                             RE::TESFaction *akAlias) { 
             if (!akLoc) akLoc = o_gossip.currentLocation();
             if (!akAlias) akAlias = o_gossip.currentFaction();
              
-            return o_gossip.getFameObj(Glob, akAlias, akLoc)->limit->max();
+            return o_gossip.getFameObj(Glob, akAlias, akLoc)->localBound.max();
              
         }
         void papyrusRegister(RE::BSScript::IVirtualMachine *Registry) {
@@ -288,10 +287,10 @@ namespace gossip {
             Registry->RegisterFunction("getFameValue", script, getFameValue);
             Registry->RegisterFunction("setFameValue", script, setFameValue);
             Registry->RegisterFunction("modFameValue", script, modFameValue);
-            Registry->RegisterFunction("setFameLimits", script, setFameLimits);
+            Registry->RegisterFunction("setFameLimit", script, setFameLimits);
             Registry->RegisterFunction("getFameMin", script, getFameMin);
             Registry->RegisterFunction("getFameMax", script, getFameMax);
-            Registry->RegisterFunction("setLocalFameLimits", script, setLocalFameLimits);
+            Registry->RegisterFunction("setLocalFameLimit", script, setLocalFameLimits);
             Registry->RegisterFunction("getLocalFameMin", script, getLocalFameMin);
             Registry->RegisterFunction("getLocalFameMax", script, getLocalFameMax);
            
@@ -353,7 +352,7 @@ namespace gossip {
             auto tol = o_gossip.getToleranceObj(akLoc, glob);
             if (!tol) return -1;
             int oldVal = *tol;
-            *tol = amt;
+            tol->set(amt);
             return returnOldVal ? oldVal : static_cast<int>(*tol);
         }
         int modToleranceValue(RE::StaticFunctionTag *, RE::TESGlobal *glob, int amt, RE::BGSLocation *akLoc,
@@ -365,7 +364,7 @@ namespace gossip {
             auto tol = o_gossip.getToleranceObj(akLoc, glob);
             if (!tol) return -1;
             int oldVal = *tol;
-            tol += amt;
+            tol->mod(amt);
             return returnOldVal ? oldVal : static_cast<int>(*tol);
         }
         void setToleranceLimits(RE::StaticFunctionTag *, RE::TESGlobal *Glob, int min, int max, RE::BGSLocation* akLoc) { 

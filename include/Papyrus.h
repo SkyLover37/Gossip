@@ -26,7 +26,6 @@ namespace gossip {
     bool removeFameTag(RE::StaticFunctionTag*, RE::TESGlobal* valueKey, std::string valueTag);
 
     std::vector<std::string> getValueTags(RE::StaticFunctionTag*, RE::TESGlobal* valueGlobal);
-    void setupGossip(RE::StaticFunctionTag*, RE::TESGlobal* interest, RE::TESGlobal* recognition);
     RE::TESGlobal* getFameGlobal(RE::StaticFunctionTag*, std::string globalName);
     std::string getFameName(RE::StaticFunctionTag*, RE::TESGlobal* global);
     std::vector<RE::TESGlobal*> getAllFameGlobals(RE::StaticFunctionTag*);

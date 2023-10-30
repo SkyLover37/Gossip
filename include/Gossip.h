@@ -13,10 +13,12 @@ namespace gossip {
             evt->ReadRecordData(val);
         }
         tolerance(std::uint16_t amt){};
-
-        void operator=(std::uint16_t amt) { val = clamp(raw = amt); }
-        void operator+=(std::uint16_t amt) { val = clamp(raw += amt); }
-        void operator-=(std::uint16_t amt) { val = clamp(raw -= amt); }
+        void set(int data) { 
+            val = clamp(raw = data);
+        }
+        void mod(int data) { 
+            val = clamp(raw += data);
+        }
         operator int() { return val; }
         void save(SKSE::SerializationInterface* evt) {
             limit::save(evt);
