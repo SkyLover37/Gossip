@@ -28,6 +28,7 @@ namespace gossip {
             knownEntry.second(evt);
         }
         
+        
     }
     fameProfile::fameProfile(SKSE::SerializationInterface* evt) {
         logger::debug("loading profile");
@@ -45,6 +46,15 @@ namespace gossip {
             if (!data.tLoc) continue;
             regionMap.insert(std::make_pair(data.tLoc, data));
         }
+        size = getSize(evt);
+        sawPlayerSex.reserve(size);
+        for (int i = 0; i < size; ++i) {
+            RE::Actor* actorForm;
+            readForm(evt, actorForm);
+            if (!actorForm) continue;
+            logger::debug("Loaded {} from co-save", actorForm->GetName());
+            sawPlayerSex.push_back(actorForm);
+        }
         logger::debug("Finished profile load");
     }
     void fameProfile::operator()(SKSE::SerializationInterface* evt) {
@@ -59,6 +69,10 @@ namespace gossip {
         for (auto entry : regionMap) {
             logger::debug("Saving {} region", entry.second.tLoc->GetFormEditorID());
             entry.second(evt);
+        }
+        evt->WriteRecordData(sawPlayerSex.size());
+        for (auto& entry : sawPlayerSex) {
+            evt->WriteRecordData(entry->GetFormID());
         }
     }
 }  // namespace gossip

@@ -11,17 +11,14 @@ namespace gossip {
         bound(T min, T max) : _min(min), _max(max) {}
         
         bound(SKSE::SerializationInterface* evt) {
-            logger::debug("Loading fame limit");
             evt->ReadRecordData(_min);
             evt->ReadRecordData(_max);
         };
         void save(SKSE::SerializationInterface* evt) {
-            logger::debug("Saving fame limit");
             evt->WriteRecordData(_min);
             evt->WriteRecordData(_max);
         }
         void setLimits(T min, T max) {
-            logger::debug("Setting limits 2 {} {}", min, max);
             _min = min;
             _max = max;
         }
@@ -39,9 +36,9 @@ namespace gossip {
         //fameLimit(){};
         fameLimit(limit_type type, std::uint16_t min, std::uint16_t max) : type(type), fameLimit_t(min, max){};
         fameLimit(SKSE::SerializationInterface* evt) : fameLimit_t(evt) {
-            logger::debug("loading fameLimit object");
             char store;
-            evt->ReadRecordData(store); 
+            evt->ReadRecordData(store);
+            
             switch (store) {
                 case 'L': {
                     type = limit_type::local;
@@ -54,13 +51,12 @@ namespace gossip {
             }
         };
         void setLimits(std::uint16_t min, std::uint16_t max) { 
-            logger::debug("setting limits {} {} ", min, max);
             fameLimit_t::setLimits(min, max);
         }
         void save(SKSE::SerializationInterface* evt) {
-            logger::debug("saving fameLimit object");
             fameLimit_t::save(evt);
-            evt->WriteRecordData(static_cast<char>(type));
+            type == local ? evt->WriteRecordData('L') : evt->WriteRecordData('R');
+            
         }
         bool operator==(limit_type type) { return this->type == type; }
     };
@@ -80,8 +76,10 @@ namespace gossip {
             evt->ReadRecordData(size);
             tags.reserve(size);
             for (int i = 0; i < size; i++) {
-                tags.push_back(readString(evt));
+                std::string temp = readString(evt); 
+                tags.push_back(temp);
             }
+
             name = readString(evt);
         };
         fameInfo(RE::TESGlobal* newForm, std::string name, std::uint16_t min, std::uint16_t max, std::vector<std::string> tags);
@@ -89,6 +87,11 @@ namespace gossip {
         fameLimit* getLimit() { return static_cast<fameLimit*>(this); };
         RE::TESGlobal* getGlobal() { return fameGlobal;}
         std::string& getName() { return name; }
+        bool hasTag(std::string& tag) { 
+            boost::algorithm::to_lower(tag);
+            auto entry = std::find(tags.begin(), tags.end(), tag);
+            return entry != tags.end();
+        }
         bool operator!() { 
             return !fameGlobal; }
     };
@@ -102,12 +105,13 @@ namespace gossip {
         std::uint16_t raw = 0;
         std::uint16_t val = 0;
         fameLimit* limit = nullptr;
-        
+        std::uint16_t reqGossip = 0;
         std::uint16_t _gossip = 0;
         fameLimit localBound;
         fameInfo* info = nullptr;
         fameData(fameInfo* tmpInfo) : info(tmpInfo), localBound(fameLimit::limit_type::local, 0, 100), limit(tmpInfo->getLimit()) {};
-        fameData(fameInfo* tmpInfo, std::uint16_t min, std::uint16_t max) : info(tmpInfo), localBound(fameLimit::limit_type::local, min, max) {}
+        fameData(fameInfo* tmpInfo, std::uint16_t min, std::uint16_t max)
+            : info(tmpInfo), localBound(fameLimit::limit_type::local, min, max), limit(tmpInfo->getLimit()) {}
         fameData(SKSE::SerializationInterface* evt);
         
         void operator+=(fameData& data) { 
@@ -124,10 +128,23 @@ namespace gossip {
             _gossip = data._gossip;
         }
         void set(int data) { 
+            int old = val;
             val = limit->clamp(raw = data);
+            logger::debug("Setting {} to {} and is now {} clamped to {}", info->getName(), data, raw, val);
+
+            // update required gossip
+            if (val != old) {
+                reqGossip = (val / 2) * (1 + val);
+            }
         }
         void mod(int data) { 
+            int old = val;
             val = limit->clamp(raw += data);
+            //update required gossip
+            logger::debug("Modded {} by {} and is now {} clamped to {}", info->getName(), data, raw, val);
+            if (val != old) {
+                reqGossip = (val / 2) * (1 + val);
+            }
         }
         operator int() { return val; }
         void save(SKSE::SerializationInterface* evt);

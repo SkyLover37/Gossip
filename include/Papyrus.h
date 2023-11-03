@@ -29,6 +29,7 @@ namespace gossip {
     RE::TESGlobal* getFameGlobal(RE::StaticFunctionTag*, std::string globalName);
     std::string getFameName(RE::StaticFunctionTag*, RE::TESGlobal* global);
     std::vector<RE::TESGlobal*> getAllFameGlobals(RE::StaticFunctionTag*);
+    std::vector<RE::TESGlobal*> getFameByTag(RE::StaticFunctionTag*, std::string Tag);
     std::vector<std::string> getAllFameNames(RE::StaticFunctionTag*);
     
     std::vector<std::string> getAllLocationNames(RE::StaticFunctionTag*);
@@ -37,6 +38,12 @@ namespace gossip {
     bool isTrackedLocation(RE::StaticFunctionTag*, RE::BGSLocation* akLoc, bool checkParent);
     RE::BGSLocation* getCurrentLocation(RE::StaticFunctionTag*);
     RE::BGSLocation* resolveTrackedLocation(RE::StaticFunctionTag*, RE::BGSLocation* akLoc);
+
+    void sawPlayerSex(RE::StaticFunctionTag*, RE::Actor* akActor);
+    void clearSawPlayerSex(RE::StaticFunctionTag*);
+    std::vector<RE::Actor*> getSawPlayerSex(RE::StaticFunctionTag*);
+
+
     namespace fame 
     {
         bool useGlobalFameLimit(RE::StaticFunctionTag* , RE::TESGlobal* Glob, RE::BGSLocation* akLoc,
@@ -50,6 +57,10 @@ namespace gossip {
         int modFameValue(RE::StaticFunctionTag* , RE::TESGlobal* glob, int amt, RE::BGSLocation* akLoc,
                          RE::TESFaction* akAlias, bool returnOldVal);
         
+        void setFameByTag(RE::StaticFunctionTag*, std::string Tag, int amt, RE::BGSLocation* akLoc,
+                         RE::TESFaction* akAlias);
+        void modFameByTag(RE::StaticFunctionTag*, std::string Tag, int amt, RE::BGSLocation* akLoc,
+                         RE::TESFaction* akAlias);
         void setFameLimits(RE::StaticFunctionTag*, RE::TESGlobal* Glob, int min, int max);
         int getFameMin(RE::StaticFunctionTag*, RE::TESGlobal* Glob);
         int getFameMax(RE::StaticFunctionTag*, RE::TESGlobal* Glob);
@@ -64,10 +75,12 @@ namespace gossip {
     namespace gossipVal {
         int getGossipValue(RE::StaticFunctionTag*, RE::TESGlobal* glob, RE::BGSLocation* akLoc,
                            RE::TESFaction* akAlias);
-        int setGossipValue(RE::StaticFunctionTag*, RE::TESGlobal* glob, RE::BGSLocation* akLoc, RE::TESFaction* akAlias,
-                           bool returnOldVal = false);
-        int modGossipValue(RE::StaticFunctionTag*, RE::TESGlobal* glob, RE::BGSLocation* akLoc, RE::TESFaction* akAlias,
-                           bool returnOldVal = false);
+        int setGossipValue(RE::StaticFunctionTag*, RE::TESGlobal* glob, int amt, RE::BGSLocation* akLoc,
+                           RE::TESFaction* akAlias, bool returnOldVal = false);
+        int modGossipValue(RE::StaticFunctionTag*, RE::TESGlobal* glob, int amt, RE::BGSLocation* akLoc,
+                           RE::TESFaction* akAlias, bool returnOldVal = false);
+        void setGossipByTag(RE::StaticFunctionTag*, std::string Tag, int amt, RE::BGSLocation* akLoc, RE::TESFaction* akAlias);
+        void modGossipByTag(RE::StaticFunctionTag*, std::string Tag, int amt, RE::BGSLocation* akLoc, RE::TESFaction* akAlias);
     }  // namespace gossipVal
     namespace ntolerance {
         int getToleranceValue(RE::StaticFunctionTag*, RE::TESGlobal* glob, RE::BGSLocation* akLoc);

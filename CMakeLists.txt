@@ -12,6 +12,9 @@ project(
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+set(Boost_USE_STATIC_LIBS OFF) 
+set(Boost_USE_MULTITHREADED ON)  
+set(Boost_USE_STATIC_RUNTIME OFF) 
 
 include(GNUInstallDirs)
 
@@ -63,6 +66,11 @@ find_package(CommonLibSSE CONFIG REQUIRED)
 
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${headers} ${sources})
 add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
+find_package(Boost 1.83.0 REQUIRED COMPONENTS filesystem) 
+
+if(Boost_FOUND)
+    target_link_libraries(${PROJECT_NAME} PUBLIC Boost::filesystem)
+endif()
 #target_link_libraries(${PROJECT_NAME} PUBLIC type_safe)
 target_include_directories(${PROJECT_NAME}
         PRIVATE

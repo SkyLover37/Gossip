@@ -11,7 +11,8 @@
       "description": "Build the SKSE plugin.",
       "dependencies": [
         "commonlibsse-ng",
-        "type-safe"
+        "type-safe",
+        "boost"
       ]
     }
   },

@@ -10,6 +10,7 @@ namespace gossip {
         evt->ReadRecordData(strings);
         name.resize(strings);
         evt->ReadRecordData(name.data(), static_cast<std::uint32_t>(strings));
+        //logger::debug("Reading string {}", name);
         return name;
     }
    

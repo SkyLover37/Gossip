@@ -6,7 +6,8 @@
       "repository": "https://github.com/microsoft/vcpkg.git",
       "packages": [
         "*",
-        "type-safe"
+        "type-safe",
+        "boost"
       ]
     },
     {

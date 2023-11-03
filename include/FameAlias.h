@@ -28,6 +28,7 @@ namespace gossip {
         fameAlias* activeAlias = nullptr;
         aliasMap aliasMap;
         regionMap regionMap;
+        std::vector<RE::Actor*> sawPlayerSex;
         fameProfile(RE::TESObjectREFR* akActor) : akActor(akActor) {}
         fameProfile(SKSE::SerializationInterface* evt);
         fameAlias& operator[](RE::TESFaction* fac) { 

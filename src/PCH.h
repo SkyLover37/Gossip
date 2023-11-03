@@ -95,6 +95,8 @@
 #include <vector>
 #include <version>
 
+#include <boost/algorithm/string.hpp>
+
 #include <RE/Skyrim.h>
 #include <SKSE/SKSE.h>
 #include <REL/Relocation.h>

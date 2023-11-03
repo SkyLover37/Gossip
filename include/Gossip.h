@@ -63,7 +63,7 @@ namespace gossip {
             fame.insert(std::make_pair(recognition, fameInfo(recognition, "Recognition", 0, 100, std::vector<std::string>())));
             return true;
         }
-
+        float nextNotif = 0.0f;
         RE::TESFaction* currentFaction();
         RE::BGSLocation* currentLocation();
         RE::BGSLocation* checkLocation(RE::BGSLocation* checkLoc, bool CheckLocation = true);

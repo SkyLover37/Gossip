@@ -41,12 +41,13 @@ namespace gossip {
         return checkLocation(RE::PlayerCharacter::GetSingleton()->GetCurrentLocation());
     }
     RE::BGSLocation *Gossip::checkLocation(RE::BGSLocation *checkLoc, bool checkParent) {
-        logger::debug("Checking if {} is tracked location.", checkLoc->GetFormEditorID());
         if (!checkLoc) 
         {
             logger::debug("checkLocation passed null");
             return nullptr;
         }
+
+        logger::debug("Checking if {} is tracked location.", checkLoc->GetName());
         RE::BGSLocation *newLoc;
         if (std::find(trackedLocations.begin(), trackedLocations.end(), checkLoc) != trackedLocations.end()) {
             
@@ -69,16 +70,30 @@ namespace gossip {
         logger::debug("Getting {} object in {} for {}", global->GetFormEditorID(), loc->GetName(),
                       faction ? faction->GetName() : "Player");
         auto entry = fame.find(global);
-        if (entry == fame.end()) return nullptr;
+        if (entry == fame.end()) 
+        {
+            logger::debug("Failed to find fameInfo");
+            return nullptr;
+        }
         fameInfo *info = &entry->second;
         if (!info) return nullptr;
         region* fameRegion = getRegionObj(faction, loc);
-        if (!fameRegion) return nullptr;
+        if (!fameRegion) 
+        {
+            logger::debug("Failed to retrieve fame region");
+            return nullptr;
+        }
         fameMap &fMap = fameRegion->fameMap;
         auto data = fMap.find(info);
         if (data == fMap.end()) {
             logger::debug("Creating new fame data");
             data = fMap.insert(std::make_pair(info, fameData(info))).first;
+        }
+        if (!data->second.limit) 
+        {
+            logger::debug("The limit value of {} fameData in {} on {} is not set", global->GetFormEditorID(),
+                          loc->GetName(), faction ? faction->GetName() : "Player");
+            return nullptr;
         }
         return &data->second;
          

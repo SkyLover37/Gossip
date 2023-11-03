@@ -11,6 +11,7 @@ namespace gossip {
         evt->ResolveFormID(oldForm, newForm);
         // auto handler = RE::TESDataHandler::GetSingleton();
         // auto aForm = handler->LookupForm<RE::TESGlobal>(newForm, "Gossip.esp");
+        
         req = RE::TESForm::LookupByID<T>(newForm);
         if (!req) {
             logger::error("Failed to retrieve a form {:x},{:x}", oldForm, newForm);
