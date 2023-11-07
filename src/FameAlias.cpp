@@ -2,7 +2,7 @@
 //#include <Scandal.h>
 namespace gossip {
     
-    fameAlias::fameAlias(SKSE::SerializationInterface* evt) {
+    fameAlias::fameAlias(SKSE::SerializationInterface* evt, std::uint32_t version) {
         logger::debug("loading alias");
         name = readString(evt);
         readForm(evt, faction);
@@ -12,7 +12,7 @@ namespace gossip {
         std::size_t size;
         evt->ReadRecordData(size);
         for (int i = 0; i < size; i++) {
-            auto reg = region(evt);
+            auto reg = region(evt, version);
             if (!reg) continue;
             regionMap.insert({reg.tLoc, reg});
         }
@@ -30,19 +30,19 @@ namespace gossip {
         
         
     }
-    fameProfile::fameProfile(SKSE::SerializationInterface* evt) {
+    fameProfile::fameProfile(SKSE::SerializationInterface* evt, std::uint32_t Version) {
         logger::debug("loading profile");
         //readForm(evt, akActor);
         std::size_t size = getSize(evt);
         for (int i = 0; i < size; i++) {
-            auto data = fameAlias(evt);
+            auto data = fameAlias(evt, Version);
             aliasMap.insert(std::make_pair(data.faction, data));
         }
 
         size = getSize(evt);
         logger::debug("Loading {} regions", size);
         for (int i = 0; i < size; ++i) {
-            auto data = region(evt);
+            auto data = region(evt, Version);
             if (!data.tLoc) continue;
             regionMap.insert(std::make_pair(data.tLoc, data));
         }

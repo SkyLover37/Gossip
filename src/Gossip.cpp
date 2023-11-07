@@ -6,6 +6,10 @@ namespace gossip {
         infoRelay = &fame;
     
     }
+
+    SKSE::RegistrationSet<const RE::TESObjectREFR *> playerSightEvent{"gossipSight"sv};
+    SKSE::RegistrationSet<const RE::TESObjectREFR *> playerSightLostEvent{"gossipLostSight"sv};
+    SKSE::RegistrationSet<const RE::BGSLocation *, const RE::BGSLocation *> playerRegionChange{"gossipRegionChange"sv}; 
     fameInfo* Gossip::operator[](RE::TESGlobal *global) {
         if (!global || !isActive) return nullptr;
         auto entry = fame.find(global);
@@ -121,16 +125,19 @@ namespace gossip {
         
         Gossip& gossip = Gossip::getSingleton();
         if (!gossip.isReady()) return;
-        if (!evt->OpenRecord('GSIP', 1)) {
+        if (!evt->OpenRecord('GSIP', 3)) {
         
         } else {
             logger::debug("Saving gossip");
+            playerSightEvent.Save(evt);
+            playerSightLostEvent.Save(evt);
+            playerRegionChange.Save(evt);
             evt->WriteRecordData(gossip.interest->GetFormID());
             evt->WriteRecordData(gossip.recognition->GetFormID());
             evt->WriteRecordData(gossip.isActive);
         }
         std::size_t size = gossip.fame.size();
-        if (!evt->OpenRecord('FAME', 1)) {
+        if (!evt->OpenRecord('FAME', 3)) {
         } else {
             evt->WriteRecordData(size);
             logger::info("saving {} fame", size);
@@ -138,7 +145,7 @@ namespace gossip {
                 famein.second.save(evt);
             }
         }
-        if (!evt->OpenRecord('LOCN', 1)) {
+        if (!evt->OpenRecord('LOCN', 3)) {
         
         } else {
             logger::debug("saving {} locations", o_gossip.trackedLocations.size());
@@ -147,7 +154,7 @@ namespace gossip {
                 evt->WriteRecordData(entry->GetFormID());
             };
         }
-        if (!evt->OpenRecord('PROF', 1)) {
+        if (!evt->OpenRecord('PROF', 3)) {
         } else {
             //evt->WriteRecordData(gossip->npcProfile.size());
             //for (auto &profile : gossip->npcProfile) {
@@ -155,7 +162,7 @@ namespace gossip {
             o_gossip.profile.operator()(evt);
             //}
         }
-        if (!evt->OpenRecord('TLRC', 1)) {
+        if (!evt->OpenRecord('TLRC', 3)) {
         } else {
             logger::debug("saving {} tolerance", gossip.regionTolerance.size());
             evt->WriteRecordData(gossip.regionTolerance.size());
@@ -181,6 +188,11 @@ namespace gossip {
                     logger::debug("Loading gossip object");
                     RE::TESGlobal *inter = nullptr;
                     RE::TESGlobal *Recog = nullptr;
+                    if (version >= 2) {
+                        playerSightEvent.Load(evt);
+                        playerSightLostEvent.Load(evt);
+                        playerRegionChange.Load(evt);
+                    }
                     readForm(evt, inter);
                     readForm(evt, Recog);
                     o_gossip.setup(inter, Recog);
@@ -225,7 +237,7 @@ namespace gossip {
                 }
                 case 'PROF': {
                     logger::debug("Loading profile");
-                    o_gossip.profile = fameProfile(evt);
+                    o_gossip.profile = fameProfile(evt, version);
                     break;
                 }
                 case 'TLRC': {

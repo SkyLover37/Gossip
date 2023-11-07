@@ -2,7 +2,6 @@
 #include <valueData.h>
 namespace gossip {
     struct default_limit_tag {};
-    
     template <typename T>
     struct bound {
         T _min;

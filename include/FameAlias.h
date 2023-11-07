@@ -9,7 +9,7 @@ namespace gossip {
         RE::TESFaction* faction;
         regionMap regionMap;
         fameAlias(std::string name, RE::TESFaction* faction) : name(name), faction(faction) {}
-        fameAlias(SKSE::SerializationInterface* evt);
+        fameAlias(SKSE::SerializationInterface* evt, std::uint32_t version);
         void operator()(SKSE::SerializationInterface* evt);
         region& operator[](RE::BGSLocation* loc) { 
             auto entry = regionMap.find(loc);
@@ -30,7 +30,7 @@ namespace gossip {
         regionMap regionMap;
         std::vector<RE::Actor*> sawPlayerSex;
         fameProfile(RE::TESObjectREFR* akActor) : akActor(akActor) {}
-        fameProfile(SKSE::SerializationInterface* evt);
+        fameProfile(SKSE::SerializationInterface* evt, std::uint32_t Version);
         fameAlias& operator[](RE::TESFaction* fac) { 
             auto entry = aliasMap.find(fac);
             if (entry == aliasMap.end())

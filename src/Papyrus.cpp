@@ -175,6 +175,40 @@ namespace gossip {
     std::vector<RE::BGSLocation *> gossip::getAllLocations(RE::StaticFunctionTag *) {
         return Gossip::getSingleton().trackedLocations;
     }
+
+    void registerForSight(RE::StaticFunctionTag *, RE::TESForm *aForm) {
+        if (!aForm) return;
+        playerSightEvent.Register(aForm);
+        playerSightLostEvent.Register(aForm);
+    }
+
+    void unregisterForSight(RE::StaticFunctionTag *, RE::TESForm *aForm) {
+        if (!aForm) return;
+        playerSightEvent.Unregister(aForm);
+        playerSightLostEvent.Unregister(aForm);
+    }
+
+    void registerForRegionChange(RE::StaticFunctionTag *, RE::TESForm *aForm) {
+        if (!aForm) return;
+        
+        playerRegionChange.Register(aForm);
+    }
+
+    void unregisterForRegionChange(RE::StaticFunctionTag *, RE::TESForm *aForm) {
+        if (!aForm) return;
+        playerRegionChange.Unregister(aForm);
+    }
+
+    float getTimeSinceVisit(RE::StaticFunctionTag *, RE::BGSLocation *akLoc, RE::TESFaction *akAlias) { 
+        if (!akLoc) {
+            akLoc = o_gossip.currentLocation();
+            if (!akLoc) return false;
+        }
+        region *reg = o_gossip.getRegionObj(akAlias, akLoc);
+        if (!reg) return -1.0f;
+        return RE::Calendar::GetSingleton()->GetCurrentGameTime() - reg->timeSinceVisit; 
+    
+    }
    
     bool setCurrentAlias(RE::StaticFunctionTag *, RE::TESFaction *actorAlias) {
         if (!Gossip::getSingleton().profile.aliasMap.contains(actorAlias)) return false;
@@ -291,7 +325,7 @@ namespace gossip {
                 akLoc = o_gossip.currentLocation();
                 if (!akLoc) return -1;
             }
-                
+            if (amt > 0) o_gossip.sendFameGainNotification();    
             
             logger::debug("Modding {}'s {} Fame in {}", akAlias ? akAlias->GetName() : "Player" , glob->GetFormEditorID(),
                           akLoc->GetName());
@@ -327,6 +361,7 @@ namespace gossip {
                 akLoc = o_gossip.currentLocation();
                 if (!akLoc) return;
             }
+            if (amt > 0) o_gossip.sendFameGainNotification();
             for (auto &entry : o_gossip.fame) {
                 auto &info = entry.second;
                 if (info.hasTag(Tag)) {
@@ -441,6 +476,7 @@ namespace gossip {
 
             fameObj->_gossip += amt;
             while (*fameObj < fameObj->limit->max() && fameObj->_gossip >= fameObj->reqGossip) {
+                o_gossip.sendFameGainNotification();
                 fameObj->mod(1);
                 logger::debug("Gossip threshold reached. Gossip {} : Req {} : fame {}", fameObj->_gossip,
                               fameObj->reqGossip, int(*fameObj));
@@ -482,6 +518,7 @@ namespace gossip {
                     fameObj->_gossip += amt;
                     while (*fameObj < fameObj->limit->max() && fameObj->_gossip >= fameObj->reqGossip) {
                         fameObj->mod(1);
+                        o_gossip.sendFameGainNotification();
                     }
                 }
             }
@@ -601,6 +638,11 @@ namespace gossip {
         Registry->RegisterFunction("sawPlayerSex", script, sawPlayerSex);
         Registry->RegisterFunction("getSawPlayerSex", script, getSawPlayerSex);
         Registry->RegisterFunction("clearSawPlayerSex", script, clearSawPlayerSex);
+        Registry->RegisterFunction("registerForSight", script, registerForSight);
+        Registry->RegisterFunction("unregisterForSight", script, unregisterForSight);
+        Registry->RegisterFunction("registerForRegionChange", script, registerForRegionChange);
+        Registry->RegisterFunction("unregisterForRegionChange", script, unregisterForRegionChange);
+        Registry->RegisterFunction("getTimeSinceVisit", script, getTimeSinceVisit);
         fame::papyrusRegister(Registry);
         gossipVal::papyrusRegister(Registry);
         ntolerance::papyrusRegister(Registry);

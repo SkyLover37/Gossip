@@ -35,6 +35,12 @@ namespace gossip {
     std::vector<std::string> getAllLocationNames(RE::StaticFunctionTag*);
     std::vector<RE::BGSLocation*> getAllLocations(RE::StaticFunctionTag*);
 
+    void registerForSight(RE::StaticFunctionTag*, RE::TESForm* aForm);
+    void unregisterForSight(RE::StaticFunctionTag*, RE::TESForm* aForm);
+
+    void registerForRegionChange(RE::StaticFunctionTag*, RE::TESForm* aForm);
+    void unregisterForRegionChange(RE::StaticFunctionTag*, RE::TESForm* aForm);
+    float getTimeSinceVisit(RE::StaticFunctionTag*, RE::BGSLocation* akLoc, RE::TESFaction* akAlias);
     bool isTrackedLocation(RE::StaticFunctionTag*, RE::BGSLocation* akLoc, bool checkParent);
     RE::BGSLocation* getCurrentLocation(RE::StaticFunctionTag*);
     RE::BGSLocation* resolveTrackedLocation(RE::StaticFunctionTag*, RE::BGSLocation* akLoc);

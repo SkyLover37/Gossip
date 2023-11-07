@@ -1,10 +1,12 @@
 #include <Region.h>
 namespace gossip {
-    region::region(SKSE::SerializationInterface* evt){
+    region::region(SKSE::SerializationInterface* evt, std::uint32_t Version){
         
         readForm(evt, tLoc);
         if (!tLoc) logger::debug("location failed");
         std::size_t size;
+        if (Version >= 3)
+            evt->ReadRecordData(timeSinceVisit);
         evt->ReadRecordData(size);
         logger::debug("Loading {} fame in {}", size, tLoc->GetName());
         for (int i = 0; i < size; ++i) {
@@ -21,6 +23,8 @@ namespace gossip {
     }
     void region::operator()(SKSE::SerializationInterface* evt) {
         evt->WriteRecordData(tLoc->GetFormID());
+    
+        evt->WriteRecordData(timeSinceVisit);
         evt->WriteRecordData(fameMap.size());
         for (auto& fame : fameMap) {
             logger::debug("Saving {} Fame", fame.second.info->getGlobal()->GetFormEditorID());
